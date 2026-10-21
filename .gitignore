@@ -1,0 +1,35 @@
+# ============================================================
+# Modern Manor 生成器 — .gitignore
+# 注意：gitignore 不支持行内注释，注释必须独占一行
+# ============================================================
+
+# --- Minecraft 存档（均可由种子 + 代码重建，不入库）---
+TEST_BUILDINGS/
+# 由 tools/pregen_seed_world.py 从种子号无头预生成的原始世界模板
+seed_world/
+# 临时测试样本
+1018.1/
+1018.2/
+
+# --- 第三方二进制（体积大，请自行获取官方 1.21.10 server jar 放入 tools/）---
+tools/minecraft-server.jar
+
+# --- Python 运行时产物 ---
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+
+# --- 验证/渲染输出产物（可由脚本重新生成，含坐标隐私，不入库）---
+render_*.png
+validation_report.json
+generator_src/baselines/
+
+# --- 编辑器 / 系统杂项 ---
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+Desktop.ini
