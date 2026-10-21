@@ -36,8 +36,7 @@
 │   ├── generate_estate.py             # 主编排器
 │   ├── verify_1_21_10_schema.py       # 1.21.10 NBT 合规校验器
 │   ├── audit_spatial_connectivity.py  # 3D 空间连通性审计器
-│   ├── validate_and_render.py         # 全量回读验证 + 渲染
-│   └── base_terrain_snapshot.bin      # 建造前地形快照（保证幂等重建）
+│   └── validate_and_render.py         # 全量回读验证 + 渲染
 ├── tools/
 │   ├── pregen_seed_world.py           # 从种子号预生成原始世界模板
 │   ├── regen_snapshot.py              # 按当前画布范围重建地形快照

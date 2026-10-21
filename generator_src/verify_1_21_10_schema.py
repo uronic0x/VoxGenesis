@@ -5,10 +5,10 @@ verify_1_21_10_schema.py — Minecraft Java Edition 1.21.10 (DataVersion = 4556)
 Reads back `level.dat`, `region/*.mca`, and `entities/*.mca` directly using `nbt_mca.NBTReader` and verifies:
   1. `DataVersion == 4556` (Minecraft Java Edition 1.21.10);
   2. Zero entities (`entities = []` in `region/*.mca` and `Entities = []` in `entities/*.mca`, no mobs/armor stands);
-  3. All 1872 canvas chunks (`cx in -20..15, cz in -40..11`) have `Status == "minecraft:full"` and `isLightOn == 0`;
+  3. All 2,232 canvas chunks (`cx in -20..15, cz in -50..11`) have `Status == "minecraft:full"` and `isLightOn == 0`;
   4. Non-spanning 64-bit `TAG_Long_Array` bit-packing lengths and palette indices in every section;
-  5. 1.21.10 block name and property key/value compliance across all section palettes (including `iron_chain`,
-     `oxidized_copper_grate[waterlogged=...]`, `deepslate_tiles`, `spruce_planks`, `barrel[facing=...,open=...]`).
+  5. 1.21.10 block name and property key/value compliance across all section palettes, verified against both
+     internal schema rules and the official 1.21.10 `blockstates/*.json` definitions if present.
 """
 
 import os
@@ -16,6 +16,8 @@ import sys
 import struct
 import zlib
 import gzip
+import json
+import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import DATA_VERSION, CANVAS_BOUNDS, EXPECTED_CANVAS_CHUNKS
@@ -52,6 +54,23 @@ VALID_PROP_VALUES = {
     'candles': {'1', '2', '3', '4'},
     'flower_amount': {'1', '2', '3', '4'},
 }
+
+def _load_official_1_21_10_blockstates():
+    """Loads official MC 1.21.10 blockstates/*.json from vanilla assets zip if available on the machine."""
+    candidates = [
+        os.environ.get('MC_1_21_10_ASSETS_ZIP', ''),
+        '/working_dir/c_4d9c9ac3a495b879/user_uploaded_files/ttl=63d/user_uploaded/MC1.21.10_JAR内容_vanilla_assets.zip',
+    ]
+    for path in candidates:
+        if path and os.path.isfile(path):
+            valid_blocks = set()
+            with zipfile.ZipFile(path, 'r') as zf:
+                for name in zf.namelist():
+                    if 'assets/minecraft/blockstates/' in name and name.endswith('.json'):
+                        b_id = 'minecraft:' + os.path.basename(name)[:-5]
+                        valid_blocks.add(b_id)
+            return valid_blocks, path
+    return None, None
 
 def verify_schema(world_dir: str):
     print("=" * 72)
@@ -90,6 +109,10 @@ def verify_schema(world_dir: str):
                     total_entities += len(ents[2])
     assert total_entities == 0, f"Found {total_entities} entities in entities/*.mca"
     print("  [PASS] entities/*.mca contains 0 entities (zero mobs / armor stands)")
+
+    official_blocks, official_src = _load_official_1_21_10_blockstates()
+    if official_blocks:
+        print(f"  [INFO] Loaded {len(official_blocks)} official MC 1.21.10 blockstate definitions from {os.path.basename(official_src)}")
 
     reg_dir = os.path.join(world_dir, 'region')
     cx_min, cx_max = CANVAS_BOUNDS['x_min'] >> 4, CANVAS_BOUNDS['x_max'] >> 4
@@ -149,6 +172,8 @@ def verify_schema(world_dir: str):
                         palette_set.add(bname)
                         if bname in LEGACY_REMOVED_BLOCKS or not bname.startswith('minecraft:'):
                             schema_errors.append(f"Invalid/legacy block ID in ({cx},{cz}): {bname}")
+                        if official_blocks is not None and bname not in official_blocks:
+                            schema_errors.append(f"Block ID not in official 1.21.10 blockstates registry in ({cx},{cz}): {bname}")
                         if 'Properties' in pd:
                             for pk, pv in pd['Properties'][1].items():
                                 pval = pv[1]

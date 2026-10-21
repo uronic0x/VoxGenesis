@@ -109,8 +109,8 @@ def step1_flatten_and_grade_terrain(c: WorldCanvas):
                 continue
 
             d_core = _rounded_box_dist(x, z, -114, 108, -114, 116, corner_r=18.0)
-            d_park = _rounded_box_dist(x, z, 96, 138, -222, 22, corner_r=14.0)
-            d_lhouse = 0.0 if in_lighthouse_headland else _rounded_box_dist(x, z, 132, 168, -226, -196, corner_r=8.0)
+            d_park = _rounded_box_dist(x, z, 96, 138, -234, 22, corner_r=10.0)
+            d_lhouse = 0.0 if in_lighthouse_headland else _rounded_box_dist(x, z, 126, 170, -234, -196, corner_r=6.0)
             d_golf = _rounded_box_dist(x, z, -162, 128, -268, -96, corner_r=28.0)
             d_sports = _rounded_box_dist(x, z, -224, 132, -396, -268, corner_r=20.0)
             d_north_exp = _rounded_box_dist(x, z, -304, 240, -632, -396, corner_r=16.0)

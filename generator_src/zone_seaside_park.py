@@ -1037,8 +1037,8 @@ def build_headland_lighthouse(c: WorldCanvas):
         and unobstructed 3-wide x 3-tall West Entrance foyer!
     """
 
-    for z in range(-218, -170):
-        for x in range(132, 146):
+    for z in range(-229, -170):
+        for x in range(126 if z < -218 else 132, 146 if z >= -196 else 137):
             c.fill(x, 54, z, x, Y_BASE - 1, z, MAT['stone_pol_and'])
             if (x - 132) % 6 == 0 or (z + 216) % 6 == 0:
                 c.set_block(x, Y_BASE, z, MAT['stone_pol_and'])
@@ -1050,16 +1050,23 @@ def build_headland_lighthouse(c: WorldCanvas):
             c.set_block(145, Y_BASE, z, MAT['light_sea'] if z % 4 == 0 else MAT['wall_quartz'])
             c.set_block(145, Y_BASE + 1, z, MAT['pane_black'])
 
-    for z in range(-228, -195):
-        for x in range(136, 171):
+    for z in range(-230, -195):
+        for x in range(136, 173):
             d_ell = ((x - 153) / 17.0) ** 2 + ((z + 212) / 15.0) ** 2
             if d_ell <= 1.0:
                 c.fill(x, 52, z, x, Y_BASE - 1, z, MAT['stone_pol_and'] if d_ell > 0.78 else MAT['stone'])
                 c.set_block(x, Y_BASE, z, MAT['stone_smooth'] if (x + z) % 2 == 0 else MAT['stone_pol_and'])
-                c.fill(x, Y_BASE + 1, z, x, Y_BASE + 4, z, 'minecraft:air')
+                c.fill(x, Y_BASE + 1, z, x, Y_BASE + 6, z, 'minecraft:air')
                 if 0.84 <= d_ell <= 1.0 and x >= 145:
                     c.set_block(x, Y_BASE, z, MAT['stone_pol_and'])
                     c.set_block(x, Y_BASE + 1, z, MAT['iron_bars'])
+            elif x >= 137:
+
+                c.fill(x, 63, z, x, Y_BASE + 6, z, 'minecraft:air')
+                c.fill(x, 46, z, x, 55, z, MAT['stone'])
+                c.set_block(x, 56, z, 'minecraft:smooth_sandstone')
+                c.set_block(x, 57, z, 'minecraft:sand')
+                c.fill(x, 58, z, x, 62, z, MAT['water'])
 
     for z in range(-193, -188):
         for x in range(104, 114):

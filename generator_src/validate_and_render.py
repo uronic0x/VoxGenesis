@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-validate_and_render.py — Full Read-Back Parser Validation & Isometric/Top-Down Renderer (V5.3)
+validate_and_render.py — Full Read-Back Parser Validation & Isometric/Top-Down Renderer (V5.4)
 ==============================================================================================
 1. Parses every .mca region file in region/ and entities/ using nbt_mca.NBTReader.
 2. Verifies chunk status, section palettes, 64-bit long array bit-packing lengths,
-   block counts, isLightOn=0 lighting triggers, and Heightmaps across all 1872 full chunks.
+   block counts, isLightOn=0 lighting triggers, and Heightmaps across all 2,232 full chunks.
 3. Confirms zero P0 floating mountain tree/leaf/vine/bamboo residuals across all chunks.
 4. Confirms zero entities / armor stands in both region/*.mca and entities/*.mca.
-5. Renders high-resolution Top-Down Master Plan and 4 Architectural Elevation / Section
-   Views to PNG for visual engineering inspection.
+5. Renders high-resolution Top-Down Master Plan, 4 Architectural Elevation / Section
+   Views, and 4 V5.4 Detail Verification Sheets to PNG for visual engineering inspection.
 """
 
 import os
@@ -26,7 +26,6 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import MANOR_VERSION, CANVAS_BOUNDS, EXPECTED_CANVAS_CHUNKS
 from nbt_mca import NBTReader, unpack_section_blocks
-import subprocess
 
 def _resolve_display_version():
     return MANOR_VERSION.upper()
@@ -197,7 +196,6 @@ def run_validation_and_render(world_dir, out_dir):
                     idx_arr = np.asarray(indices, dtype=np.int32)
 
                     if sy >= 6:
-
                         forb_mask = np.array([n in FORBIDDEN_SKY_BLOCKS for n in names], dtype=bool)
                         leaf_mask = np.array([
                             (n not in FORBIDDEN_SKY_BLOCKS) and n.endswith("_leaves")
@@ -210,14 +208,12 @@ def run_validation_and_render(world_dir, out_dir):
                         base_x = cx * 16 - x_min
                         base_z = cz * 16 - z_min
                         base_y = sy * 16 - y_min
-
                         pal_cat = np.array([classify_block(n) for n in names], dtype=np.uint8)
                         is_air = np.array([n == "minecraft:air" for n in names], dtype=bool)
                         pals, cnts = np.unique(idx_arr, return_counts=True)
                         for p, cnt in zip(pals, cnts):
                             if not is_air[p]:
                                 block_counter[names[p]] += int(cnt)
-
                         blk = pal_cat[idx_arr].reshape(16, 16, 16).transpose(2, 1, 0)
                         m = blk > 0
                         sl = cat_grid[base_x:base_x + 16, base_z:base_z + 16, base_y:base_y + 16]
@@ -252,8 +248,8 @@ def run_validation_and_render(world_dir, out_dir):
         "Barrel-Vaulted Cellar, Cigar Lounge & Art Vault (X=44..94, Z=-41..-22)": ((44, 94), (-41, -22), (58, 72)),
         "Enlarged North Sports Complex: 3-Block Track, Basketball & Arena (X=-220..128, Z=-396..-252)": ((-220, 128), (-396, -252), (60, 90)),
         "50-Block Coastal & Parkland Transition Belt (X=-220..185, Z=-447..-397)": ((-220, 185), (-447, -397), (58, 85)),
-        "Large Seaside Beach Park & Sunset Pier (X=24..240, Z=-632..-448)": ((24, 240), (-632, -448), (50, 90)),
-        "Main Urban District Prototype: Civic Plaza, Metro, Galleria & Hotel (X=-304..23, Z=-632..-448)": ((-304, 23), (-632, -448), (55, 92)),
+        "Santa Monica State Beach, Pacific Park Pier & Original Muscle Beach (X=24..248, Z=-792..-448)": ((24, 248), (-792, -448), (50, 106)),
+        "Santa Monica Palisades Bluff Park, California Incline & Camera Obscura (X=-304..23, Z=-792..-448)": ((-304, 23), (-792, -448), (58, 92)),
     }
     print("\n[Validator] Zone Structural Non-Air/Non-Water Block Audit:")
     zone_stats = {}
@@ -325,29 +321,31 @@ def run_validation_and_render(world_dir, out_dir):
 
     img_rgb = base.transpose(1, 0, 2)
 
-    fig, ax = plt.subplots(figsize=(16, 20), dpi=160)
+    fig, ax = plt.subplots(figsize=(16, 22), dpi=160)
     ax.imshow(img_rgb.astype(np.uint8), extent=[x_min, x_max, z_max, z_min])
     ax.set_title(f"Modern Manor {_resolve_display_version()} — Master Plan Top-Down View (X: {x_min}..{x_max}, Z: {z_min}..{z_max})", fontsize=15, fontweight='bold', pad=12)
-    ax.set_xlabel("World X Coordinate (West -X Urban District  <--->  East +X Ocean & Beach Park)", fontsize=12)
-    ax.set_ylabel("World Z Coordinate (North -Z Beach Park & Urban Core  <--->  South +Z Front Approach)", fontsize=12)
+    ax.set_xlabel("World X Coordinate (West -X Palisades Bluffs  <--->  East +X Santa Monica Beach & Pier)", fontsize=12)
+    ax.set_ylabel("World Z Coordinate (North -Z Extended Santa Monica Beach  <--->  South +Z Front Approach)", fontsize=12)
 
     annotations = [
         (-184, -25, "West Agri-Tech Farm\n(X=-234..-134)", "white", "#2b5b2e"),
         (-111, -25, "44m Woodland &\nBrook Buffer", "white", "#1f4d2b"),
         (0, -10, "Main Modern Villa\n& Courtyard\n(X=-89..95)", "black", "#f0f4f8"),
         (10, -175, "North Golf Course\n& Canal (Z=-250..-95)", "white", "#2e6f40"),
-        (-128, -336, "Enlarged Track & Soccer Stadium\n(3-Block Lanes & Elevated VIP Press Box)", "white", "#b83b2b"),
+        (-128, -336, "Enlarged Track & Soccer Stadium\n(Widened 5-Lane Z-Stairs & VIP Box)", "white", "#b83b2b"),
         (8, -336, "Outdoor Basketball\nPark (3 Courts)", "black", "#ff9933"),
         (83, -336, "Indoor Sports Arena\n& 50m Natatorium", "black", "#d9e2ec"),
         (10, -422, "50-Block Coastal & Parkland\nTransition Belt (Z=-447..-397)", "white", "#2e6f40"),
-        (46, -588, "Seaside Aqua-Park &\nDual 3D Water Slides", "black", "#66d9e8"),
-        (46, -536, "2F Flagship Beach\nClubhouse & Sky Bar", "black", "#f0f4f8"),
-        (105, -490, "Crescent Golden Beach,\nCabanas & Volleyball", "black", "#f3d58d"),
-        (175, -536, "92m Overwater Sunset Pier &\nOctagonal Sea-Breeze Pavilion", "white", "#1d6fa5"),
-        (-50, -536, "Main Urban Civic Plaza &\nUnderground Metro Hub", "white", "#3b4252"),
-        (-50, -488, "3F Coastal Galleria\n(Commercial Prototype)", "black", "#d9e2ec"),
-        (-50, -584, "4F Azure Bay Hotel\n(Hospitality Prototype)", "black", "#ffd966"),
-        (-200, -536, "Main Urban District Grid &\nFuture Expansion Superblocks\n(X=-304..-96)", "white", "#4c566a"),
+        (82, -512, "Original Muscle Beach\n(76, 65, -527)\nRings, Bars & Weights", "black", "#66d9e8"),
+        (154, -582, "Santa Monica Pier & Pacific Park\n(36m Pacific Wheel & West Coaster)", "black", "#ffd966"),
+        (103, -557, "Looff Hippodrome\nCarousel Dome", "black", "#f3d58d"),
+        (208, -536, "Route 66 End of Trail &\nPier-End Seafood Bistro", "white", "#1d6fa5"),
+        (43, -618, "Annenberg Beach House &\nDual 3D Water Slides", "black", "#d9e2ec"),
+        (88, -660, "4 Santa Monica Beach\nVolleyball Courts", "black", "#f3d58d"),
+        (41, -686, "Venice / Santa Monica\nSkatepark Bowls", "white", "#3b4252"),
+        (-48, -586, "Santa Monica Palisades Bluffs\n& Camera Obscura Overlook\n(Zero Matchbox Buildings!)", "white", "#2e6f40"),
+        (-16, -536, "California Incline &\nPCH Highway 1", "white", "#4c566a"),
+        (146, -772, "Point Dume / Malibu\nHeadland & Bluff Slope", "black", "#f3d58d"),
         (156, -212, "Relocated & Heightened\nLighthouse (Y=64..116)", "black", "#ffd966"),
         (199, -116, "Luxury Cruise Ship\n'Serenity of the Seas'", "black", "#ffffff"),
     ]
@@ -383,17 +381,17 @@ def run_validation_and_render(world_dir, out_dir):
     ax1.legend(loc='upper left', fontsize=8)
 
     ax2 = axes[0, 1]
-    nb_img = np.full((95 - 50, sx, 3), 230, dtype=np.uint8)
+    nb_img = np.full((108 - 50, sx, 3), 230, dtype=np.uint8)
     for gx in range(sx):
-        for gy in range(50 - y_min, 95 - y_min):
-            col_slice = cat_grid[gx, (-560 - z_min):(-515 - z_min), gy]
+        for gy in range(50 - y_min, 108 - y_min):
+            col_slice = cat_grid[gx, (-605 - z_min):(-525 - z_min), gy]
             nz = col_slice[col_slice > 0]
             if len(nz) > 0:
                 c_val = int(np.max(nz))
-                nb_img[94 - (gy + y_min), gx] = palette_rgb[c_val]
-    ax2.imshow(nb_img, extent=[x_min, x_max, 50, 95], aspect='auto')
-    ax2.set_title("2. V5.3 North Axis E-W Profile: Urban District & Metro (X=-304..23) -> Beach Park & Sunset Pier (X=24..206)", fontsize=10.5, fontweight='bold')
-    ax2.set_xlabel("World X (West Gateway X=-300 -> Civic Obelisk & Underground Metro -> Beach Clubhouse -> Crescent Beach -> Sunset Pier)")
+                nb_img[107 - (gy + y_min), gx] = palette_rgb[c_val]
+    ax2.imshow(nb_img, extent=[x_min, x_max, 50, 108], aspect='auto')
+    ax2.set_title("2. V5.4 Santa Monica Axis E-W Profile: Palisades Bluffs (Y=72) -> PCH -> Carousel -> Pacific Wheel (Y=104) -> Pier Bistro", fontsize=10.0, fontweight='bold')
+    ax2.set_xlabel("World X (Palisades Bluffs & Camera Obscura -> PCH -> Looff Hippodrome -> 36m Pacific Wheel & West Coaster -> Pier End)")
     ax2.set_ylabel("Elevation Y")
 
     ax3 = axes[1, 0]
@@ -411,26 +409,26 @@ def run_validation_and_render(world_dir, out_dir):
                 c_val = int(non_w[-1]) if len(non_w) > 0 else 1
                 park_img[yp_max - 1 - gy_w, gz_w - zp_min] = palette_rgb[c_val]
     ax3.imshow(park_img, extent=[zp_min, zp_max, yp_min, yp_max], aspect='auto')
-    ax3.set_title("3. Seaside Park Waterfront Profile (Z=-228..-15, Showing Relocated & Heightened Lighthouse at Z=-212)", fontsize=10.5, fontweight='bold')
+    ax3.set_title("3. Seaside Park Waterfront Profile (Z=-228..-15, Showing Relocated Lighthouse & Clean Z=-225 Junction)", fontsize=10.5, fontweight='bold')
     ax3.set_xlabel("World Z")
     ax3.set_ylabel("Elevation Y")
 
     ax4 = axes[1, 1]
-    zn0, zn1 = -630, -280
-    yn0, yn1 = 50, 92
+    zn0, zn1 = -795, -400
+    yn0, yn1 = 50, 108
     ns_img = np.full((yn1 - yn0, zn1 - zn0, 3), 230, dtype=np.uint8)
     for gz_w in range(zn0, zn1):
         gz = gz_w - z_min
         for gy_w in range(yn0, yn1):
             gy = gy_w - y_min
-            slice_x = cat_grid[(30 - x_min):(120 - x_min), gz, gy]
+            slice_x = cat_grid[(30 - x_min):(190 - x_min), gz, gy]
             nz = slice_x[slice_x > 0]
             if len(nz) > 0:
                 non_w = nz[nz > 1]
                 c_val = int(non_w[-1]) if len(non_w) > 0 else 1
                 ns_img[yn1 - 1 - gy_w, gz_w - zn0] = palette_rgb[c_val]
     ax4.imshow(ns_img, extent=[zn0, zn1, yn0, yn1], aspect='auto')
-    ax4.set_title("4. N-S Section: Beach Park (Z=-630..-448) <- 50m Transition Belt (Z=-447..-397) -> Sports Complex", fontsize=10.5, fontweight='bold')
+    ax4.set_title("4. N-S Section: Point Dume Bluff (Z=-795) -> Skate/Volleyball -> Annenberg -> Pacific Park Pier -> Muscle Beach", fontsize=10.0, fontweight='bold')
     ax4.set_xlabel("World Z")
     ax4.set_ylabel("Elevation Y")
 
@@ -444,52 +442,54 @@ def run_validation_and_render(world_dir, out_dir):
     fig2, axes2 = plt.subplots(2, 2, figsize=(18, 12), dpi=150)
 
     ax_a = axes2[0, 0]
-    xd0, xd1, yd0, yd1 = 148, 164, 62, 117
-    lh_slice = np.full((yd1 - yd0 + 1, xd1 - xd0 + 1, 3), 230, dtype=np.uint8)
-    for xw in range(xd0, xd1 + 1):
-        for yw in range(yd0, yd1 + 1):
-            c_val = cat_grid[xw - x_min, -212 - z_min, yw - y_min]
-            if c_val > 0:
-                lh_slice[yd1 - yw, xw - xd0] = palette_rgb[int(c_val)]
-    ax_a.imshow(lh_slice, extent=[xd0, xd1, yd0, yd1], aspect='auto')
-    ax_a.set_title("A. Issue 1a: Relocated & Heightened Lighthouse (156, -212, Y=64..116) — Solid Y=64 Base & 10-Turn Spiral", fontsize=10.5, fontweight='bold')
-    ax_a.set_xlabel("World X")
-    ax_a.set_ylabel("Elevation Y")
-    ax_a.grid(True, linestyle=':', alpha=0.4, color='gray')
-
-    ax_b = axes2[0, 1]
     zb0, zb1, yb0, yb1 = -396, -376, 63, 77
     gs_slice = np.full((yb1 - yb0 + 1, zb1 - zb0 + 1, 3), 235, dtype=np.uint8)
     for zw in range(zb0, zb1 + 1):
         for yw in range(yb0, yb1 + 1):
-            c_val = cat_grid[-125 - x_min, zw - z_min, yw - y_min]
+            c_val = cat_grid[-168 - x_min, zw - z_min, yw - y_min]
             if c_val > 0:
                 gs_slice[yb1 - yw, zw - zb0] = palette_rgb[int(c_val)]
-    ax_b.imshow(gs_slice, extent=[zb0, zb1, yb0, yb1], aspect='auto')
-    ax_b.set_title("B. Issue 2: Stadium North Grandstand (Z=-387..-380) & Rear Elevated VIP Press Box (Z=-394..-388)", fontsize=10.5, fontweight='bold')
-    ax_b.set_xlabel("World Z (VIP Press Box on Solid Y=69 Floor Z=-394..-388  <--->  4-Tier Lower Seats Z=-387..-380)")
+    ax_a.imshow(gs_slice, extent=[zb0, zb1, yb0, yb1], aspect='auto')
+    ax_a.set_title("A. V5.4 Fix 2: Widened Left Grandstand Stairway (X=-168, Z=-395..-378) — 5 Steps & Clear Top Landing", fontsize=10.5, fontweight='bold')
+    ax_a.set_xlabel("World Z (Top Landing Z=-394..-388 Unobstructed at Y=70..73  <---  5 Stair Steps Z=-387..-380)")
+    ax_a.set_ylabel("Elevation Y")
+    ax_a.grid(True, linestyle=':', alpha=0.4, color='gray')
+
+    ax_b = axes2[0, 1]
+    xf0, xf1, yf0, yf1 = 118, 190, 62, 106
+    fw_slice = np.full((yf1 - yf0 + 1, xf1 - xf0 + 1, 3), 235, dtype=np.uint8)
+    for xw in range(xf0, xf1 + 1):
+        for yw in range(yf0, yf1 + 1):
+            col_s = cat_grid[xw - x_min, (-586 - z_min):(-578 - z_min), yw - y_min]
+            nz = col_s[col_s > 0]
+            if len(nz) > 0:
+                fw_slice[yf1 - yw, xw - xf0] = palette_rgb[int(np.max(nz))]
+    ax_b.imshow(fw_slice, extent=[xf0, xf1, yf0, yf1], aspect='auto')
+    ax_b.set_title("B. V5.4 Santa Monica Pier: 36m Pacific Wheel (154, 86, -582) & West Coaster Roller Coaster", fontsize=10.5, fontweight='bold')
+    ax_b.set_xlabel("World X")
     ax_b.set_ylabel("Elevation Y")
     ax_b.grid(True, linestyle=':', alpha=0.4, color='gray')
 
     ax_c = axes2[1, 0]
-    zc0, zc1, yc0, yc1 = -350, -322, 64, 80
-    sb_slice = np.full((yc1 - yc0 + 1, zc1 - zc0 + 1, 3), 235, dtype=np.uint8)
-    for idx_z, zw in enumerate(range(zc1, zc0 - 1, -1)):
-        for yw in range(yc0, yc1 + 1):
-            c_val = cat_grid[-210 - x_min, zw - z_min, yw - y_min]
-            if c_val > 0:
-                sb_slice[yc1 - yw, idx_z] = palette_rgb[int(c_val)]
-    ax_c.imshow(sb_slice, extent=[zc1, zc0, yc0, yc1], aspect='auto')
-    ax_c.set_title("C. Issue 3: West Stadium 5x7 7-Segment Scoreboard ('8 : 2' Viewed from East Looking West)", fontsize=10.5, fontweight='bold')
-    ax_c.set_xlabel("World Z (Left = South Z=-322  --->  Right = North Z=-350)")
+    xp0, xp1, yp0, yp1 = -145, 45, 60, 86
+    pb_slice = np.full((yp1 - yp0 + 1, xp1 - xp0 + 1, 3), 235, dtype=np.uint8)
+    for xw in range(xp0, xp1 + 1):
+        for yw in range(yp0, yp1 + 1):
+            col_s = cat_grid[xw - x_min, (-592 - z_min):(-580 - z_min), yw - y_min]
+            nz = col_s[col_s > 0]
+            if len(nz) > 0:
+                pb_slice[yp1 - yw, xw - xp0] = palette_rgb[int(np.max(nz))]
+    ax_c.imshow(pb_slice, extent=[xp0, xp1, yp0, yp1], aspect='auto')
+    ax_c.set_title("C. V5.4 Palisades Bluff Park & Camera Obscura at (-52, 72, -586) — Matchbox Replaced!", fontsize=10.5, fontweight='bold')
+    ax_c.set_xlabel("World X (West Foothills -> Palisades Bluff Y=72 & Camera Obscura -> Coastal Bluff Slope -> PCH Y=64)")
     ax_c.set_ylabel("Elevation Y")
     ax_c.grid(True, linestyle=':', alpha=0.4, color='gray')
 
     ax_d = axes2[1, 1]
-    bp_rgb = img_rgb[(-632 - z_min):(-448 - z_min + 1), (24 - x_min):(220 - x_min + 1), :].astype(np.uint8)
-    ax_d.imshow(bp_rgb, extent=[24, 220, -448, -632], aspect='auto')
-    ax_d.set_title("D. Issue 5a: Custom-Generated Large Seaside Beach Park & Sunset Pier (X=24..220, Z=-632..-448)", fontsize=10.5, fontweight='bold')
-    ax_d.set_xlabel("World X (Palm Boardwalk -> Clubhouse/Aqua-Park -> Golden Crescent Beach -> Sunset Pier & Lagoon)")
+    bp_rgb = img_rgb[(-785 - z_min):(-448 - z_min + 1), (-60 - x_min):(235 - x_min + 1), :].astype(np.uint8)
+    ax_d.imshow(bp_rgb, extent=[-60, 235, -448, -785], aspect='auto')
+    ax_d.set_title("D. V5.4 Santa Monica State Beach, Pacific Park Pier & Palisades Bluffs (X=-60..235, Z=-785..-448)", fontsize=10.5, fontweight='bold')
+    ax_d.set_xlabel("World X (Palisades Bluffs -> PCH -> Bike Path & Boardwalk -> Muscle Beach & Volleyball -> Santa Monica Pier)")
     ax_d.set_ylabel("World Z")
     ax_d.grid(True, linestyle=':', alpha=0.4, color='white')
 

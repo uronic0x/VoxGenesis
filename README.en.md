@@ -36,8 +36,7 @@ An entire modern world is constructed on a canvas of tens of thousands of voxels
 │   ├── generate_estate.py             # Master orchestrator
 │   ├── verify_1_21_10_schema.py       # 1.21.10 NBT compliance validator
 │   ├── audit_spatial_connectivity.py  # 3D spatial connectivity auditor
-│   ├── validate_and_render.py         # Full readback validation + rendering
-│   └── base_terrain_snapshot.bin      # Pre-build terrain snapshot (ensures idempotent rebuild)
+│   └── validate_and_render.py         # Full readback validation + rendering
 ├── tools/
 │   ├── pregen_seed_world.py           # Pre-generate raw world template from a seed
 │   ├── regen_snapshot.py              # Rebuild terrain snapshot for current canvas bounds

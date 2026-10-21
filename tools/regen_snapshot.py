@@ -50,10 +50,10 @@ def main():
 
         buf = bytearray()
         missing = 0
-        ox0, ox1, oz0, oz1, ow = -272, 255, -400, 191, 528
+        ox0, ox1, oz0, oz1, ow = -320, 255, -640, 191, 576
         for z in range(c.z_min, c.z_max + 1):
             for x in range(c.x_min, c.x_max + 1):
-                if old_raw is not None and len(old_raw) == 528 * 592 * 2 and (ox0 <= x <= ox1 and oz0 <= z <= oz1):
+                if old_raw is not None and len(old_raw) == 576 * 832 * 2 and (ox0 <= x <= ox1 and oz0 <= z <= oz1):
                     p_old = ((z - oz0) * ow + (x - ox0)) * 2
                     c.orig_surface_y[(x, z)] = old_raw[p_old]
                     c.orig_top_block[(x, z)] = "minecraft:water" if old_raw[p_old + 1] == 1 else "minecraft:grass_block"
@@ -77,7 +77,7 @@ def main():
         print(f"新快照: {len(buf)} raw -> {len(data)} bytes,列数={len(buf) // 2}")
 
         if old_raw is not None and not args.no_compare:
-            ox0, ox1, oz0, oz1, ow = -272, 255, -400, 191, 528
+            ox0, ox1, oz0, oz1, ow = -320, 255, -800, 191, 576
             mism = 0
             total = 0
             samples = []

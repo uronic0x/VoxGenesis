@@ -26,6 +26,7 @@ venv/
 render_*.png
 validation_report.json
 generator_src/baselines/
+*.bin
 
 # --- 编辑器 / 系统杂项 ---
 .idea/

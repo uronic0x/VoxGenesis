@@ -331,24 +331,37 @@ def _build_Athletics_Track_And_Stadium(c: WorldCanvas):
                 c.set_block(x, Y_BASE, z, 'minecraft:sand')
                 c.set_block(x, Y_BASE + 1, z, 'minecraft:air')
 
-    for x in range(-168, -87):
+    for x in range(-170, -85):
+        is_left_stair = (-170 <= x <= -165)
+        is_right_stair = (-91 <= x <= -86)
+        is_center_aisle = (-129 <= x <= -127)
         for tier in range(4):
             sz_seat = -380 - tier * 2
             sy_seat = Y_BASE + 1 + tier
             c.fill(x, Y_BASE + 1, sz_seat - 1, x, sy_seat - 1, sz_seat, MAT['stone_pol_and'])
-            if x in (-168, -128, -88):
+            if is_left_stair or is_right_stair or is_center_aisle:
                 c.set_block(x, sy_seat, sz_seat, stair('smooth_quartz', 'north', 'bottom'))
-                c.set_block(x, sy_seat, sz_seat - 1, MAT['wall_quartz'])
+                c.set_block(x, sy_seat, sz_seat - 1, MAT['light_ochre'] if (tier % 2 == 1 and x in (-168, -128, -88)) else MAT['wall_quartz'])
             else:
                 seat_mat = 'smooth_quartz' if (tier + x) % 3 == 0 else ('prismarine_brick' if tier % 2 == 0 else 'dark_prismarine')
                 c.set_block(x, sy_seat, sz_seat, stair(seat_mat, 'south', 'bottom'))
                 c.set_block(x, sy_seat, sz_seat - 1, MAT['wall_quartz'])
 
+        if is_left_stair or is_right_stair:
+            if x in (-170, -86):
+
+                c.set_block(x, Y_BASE + 5, -387, MAT['wall_quartz'])
+            else:
+                c.set_block(x, Y_BASE + 5, -387, stair('smooth_quartz', 'north', 'bottom'))
+                c.fill(x, Y_BASE + 6, -387, x, Y_BASE + 9, -387, 'minecraft:air')
+
         c.fill(x, Y_BASE + 1, -394, x, Y_BASE + 4, -388, MAT['stone_pol_and'])
         c.fill(x, Y_BASE + 5, -394, x, Y_BASE + 5, -388, MAT['wall_quartz'])
+        if (is_left_stair or is_right_stair) and x in (-168, -88):
+            c.set_block(x, Y_BASE + 5, -391, MAT['light_ochre'])
 
         c.fill(x, Y_BASE + 1, -395, x, Y_BASE + 10, -395, MAT['wall_white'])
-        if x % 8 == 0:
+        if x % 8 == 0 or x in (-170, -86):
             c.fill(x, Y_BASE + 1, -395, x, Y_BASE + 11, -395, MAT['frame_dark'])
             c.fill(x, Y_BASE + 11, -395, x, Y_BASE + 11, -379, MAT['frame_dark'])
         c.fill(x, Y_BASE + 10, -395, x, Y_BASE + 10, -379, MAT['slab_quartz_t'])
@@ -357,12 +370,16 @@ def _build_Athletics_Track_And_Stadium(c: WorldCanvas):
             c.set_block(x, Y_BASE + 10, -383, MAT['light_sea'])
             c.set_block(x, Y_BASE + 10, -391, MAT['light_ochre'])
 
+    for z_side in range(-394, -387):
+        c.set_block(-170, Y_BASE + 6, z_side, MAT['pane_cyan'])
+        c.set_block(-86, Y_BASE + 6, z_side, MAT['pane_cyan'])
+
     for x in range(-150, -105):
 
         if x in (-150, -106):
             for z_pb in range(-394, -387):
                 for y_pb in range(Y_BASE + 6, Y_BASE + 10):
-                    if z_pb in (-392, -391) and y_pb <= Y_BASE + 8:
+                    if z_pb in (-392, -391, -390) and y_pb <= Y_BASE + 8:
                         c.set_block(x, y_pb, z_pb, 'minecraft:air')
                     else:
                         c.set_block(x, y_pb, z_pb, MAT['frame_dark'] if z_pb in (-394, -388) else MAT['glass_clear'])
@@ -379,7 +396,7 @@ def _build_Athletics_Track_And_Stadium(c: WorldCanvas):
             c.set_block(x, Y_BASE + 6, -390, stair('dark_oak', 'north', 'bottom'))
             c.set_block(x, Y_BASE + 5, -390, MAT['light_ochre'])
 
-    for x_wing in list(range(-168, -150)) + list(range(-105, -87)):
+    for x_wing in list(range(-164, -150)) + list(range(-105, -91)):
         c.set_block(x_wing, Y_BASE + 6, -388, MAT['pane_cyan'])
 
     for z_leg in (-346, -326):
