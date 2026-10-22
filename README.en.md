@@ -1,4 +1,4 @@
-# VoxGenesis — Procedural World Generation Engine for Minecraft 1.21.10
+# VoxelGenesis — Procedural World Generation Engine for Minecraft 1.21.10
 
 > **⚠️ Version Lock**: This project targets **Minecraft Java Edition 1.21.10** (`DataVersion = 4556`, protocol `773`) specifically.
 > The generator depends on the exact block IDs, block state properties, and NBT chunk format of this version. **Compatibility with other versions is not guaranteed.**

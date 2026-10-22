@@ -1,4 +1,4 @@
-# VoxGenesis — Minecraft 1.21.10 程序化世界生成引擎
+# VoxelGenesis — Minecraft 1.21.10 程序化世界生成引擎
 
 > **⚠️ 版本锁定**：本项目专为 Minecraft Java 版 **1.21.10**（`DataVersion = 4556`，协议 `773`）开发。
 > 生成器依赖该版本精确的方块 ID、方块状态属性与 NBT 区块格式，**不保证兼容其他版本**。
