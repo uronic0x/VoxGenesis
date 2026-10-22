@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-validate_and_render.py — Full Read-Back Parser Validation & Isometric/Top-Down Renderer (V5.4)
+validate_and_render.py — Full Read-Back Parser Validation & Isometric/Top-Down Renderer (V5.5)
 ==============================================================================================
 1. Parses every .mca region file in region/ and entities/ using nbt_mca.NBTReader.
 2. Verifies chunk status, section palettes, 64-bit long array bit-packing lengths,
@@ -8,7 +8,7 @@ validate_and_render.py — Full Read-Back Parser Validation & Isometric/Top-Down
 3. Confirms zero P0 floating mountain tree/leaf/vine/bamboo residuals across all chunks.
 4. Confirms zero entities / armor stands in both region/*.mca and entities/*.mca.
 5. Renders high-resolution Top-Down Master Plan, 4 Architectural Elevation / Section
-   Views, and 4 V5.4 Detail Verification Sheets to PNG for visual engineering inspection.
+   Views, and 4 V5.5 Detail Verification Sheets to PNG for visual engineering inspection.
 """
 
 import os
@@ -248,8 +248,8 @@ def run_validation_and_render(world_dir, out_dir):
         "Barrel-Vaulted Cellar, Cigar Lounge & Art Vault (X=44..94, Z=-41..-22)": ((44, 94), (-41, -22), (58, 72)),
         "Enlarged North Sports Complex: 3-Block Track, Basketball & Arena (X=-220..128, Z=-396..-252)": ((-220, 128), (-396, -252), (60, 90)),
         "50-Block Coastal & Parkland Transition Belt (X=-220..185, Z=-447..-397)": ((-220, 185), (-447, -397), (58, 85)),
-        "Santa Monica State Beach, Pacific Park Pier & Original Muscle Beach (X=24..248, Z=-792..-448)": ((24, 248), (-792, -448), (50, 106)),
-        "Santa Monica Palisades Bluff Park, California Incline & Camera Obscura (X=-304..23, Z=-792..-448)": ((-304, 23), (-792, -448), (58, 92)),
+        "Santa Monica State Beach, Pacific Park Pier & East X+ Waterfall Cove (X=24..348, Z=-856..-448)": ((24, 348), (-856, -448), (50, 106)),
+        "Palisades Bluff Park, 3rd St Promenade, Venice Canals & Aero Hangar (X=-312..23, Z=-856..-448)": ((-312, 23), (-856, -448), (58, 92)),
     }
     print("\n[Validator] Zone Structural Non-Air/Non-Water Block Audit:")
     zone_stats = {}
@@ -343,9 +343,14 @@ def run_validation_and_render(world_dir, out_dir):
         (43, -618, "Annenberg Beach House &\nDual 3D Water Slides", "black", "#d9e2ec"),
         (88, -660, "4 Santa Monica Beach\nVolleyball Courts", "black", "#f3d58d"),
         (41, -686, "Venice / Santa Monica\nSkatepark Bowls", "white", "#3b4252"),
-        (-48, -586, "Santa Monica Palisades Bluffs\n& Camera Obscura Overlook\n(Zero Matchbox Buildings!)", "white", "#2e6f40"),
+        (-48, -586, "Santa Monica Palisades Bluffs\n& Camera Obscura Overlook", "white", "#2e6f40"),
+        (-144, -540, "3rd Street Promenade\n(Georgian Deco, Casa del Mar,\nSM Place & Criterion Rotunda)", "black", "#f8f0e3"),
+        (-168, -693, "Civic Auditorium (Folded Roof),\nTongva Park & Public Library", "white", "#1d6fa5"),
+        (-253, -550, "Venice Beach Canals\n(5 Bridges, 6 Gondolas &\n6 Distinct Non-Boxy Villas)", "white", "#0ca678"),
+        (-256, -730, "Museum of Flying Hangar (DC-3)\n& Bergamot Sawtooth Art Center", "white", "#5c5f66"),
+        (312, -659, "East X+ Faux-Natural Bluffs,\nEmerald Waterfall Cove &\nSea-Stack Arch (343,74,-659)", "white", "#2b8a3e"),
         (-16, -536, "California Incline &\nPCH Highway 1", "white", "#4c566a"),
-        (146, -772, "Point Dume / Malibu\nHeadland & Bluff Slope", "black", "#f3d58d"),
+        (146, -824, "Point Dume / Malibu\nHeadland & Bluff Slope", "black", "#f3d58d"),
         (156, -212, "Relocated & Heightened\nLighthouse (Y=64..116)", "black", "#ffd966"),
         (199, -116, "Luxury Cruise Ship\n'Serenity of the Seas'", "black", "#ffffff"),
     ]
@@ -390,7 +395,7 @@ def run_validation_and_render(world_dir, out_dir):
                 c_val = int(np.max(nz))
                 nb_img[107 - (gy + y_min), gx] = palette_rgb[c_val]
     ax2.imshow(nb_img, extent=[x_min, x_max, 50, 108], aspect='auto')
-    ax2.set_title("2. V5.4 Santa Monica Axis E-W Profile: Palisades Bluffs (Y=72) -> PCH -> Carousel -> Pacific Wheel (Y=104) -> Pier Bistro", fontsize=10.0, fontweight='bold')
+    ax2.set_title("2. V5.5 Santa Monica Axis E-W Profile: Palisades Bluffs (Y=72) -> PCH -> Carousel -> Pacific Wheel (Y=104) -> Pier Bistro", fontsize=10.0, fontweight='bold')
     ax2.set_xlabel("World X (Palisades Bluffs & Camera Obscura -> PCH -> Looff Hippodrome -> 36m Pacific Wheel & West Coaster -> Pier End)")
     ax2.set_ylabel("Elevation Y")
 
@@ -442,16 +447,17 @@ def run_validation_and_render(world_dir, out_dir):
     fig2, axes2 = plt.subplots(2, 2, figsize=(18, 12), dpi=150)
 
     ax_a = axes2[0, 0]
-    zb0, zb1, yb0, yb1 = -396, -376, 63, 77
-    gs_slice = np.full((yb1 - yb0 + 1, zb1 - zb0 + 1, 3), 235, dtype=np.uint8)
-    for zw in range(zb0, zb1 + 1):
+    xb0, xb1, yb0, yb1 = 16, 40, 74, 96
+    gs_slice = np.full((yb1 - yb0 + 1, xb1 - xb0 + 1, 3), 235, dtype=np.uint8)
+    for xw in range(xb0, xb1 + 1):
         for yw in range(yb0, yb1 + 1):
-            c_val = cat_grid[-168 - x_min, zw - z_min, yw - y_min]
-            if c_val > 0:
-                gs_slice[yb1 - yw, zw - zb0] = palette_rgb[int(c_val)]
-    ax_a.imshow(gs_slice, extent=[zb0, zb1, yb0, yb1], aspect='auto')
-    ax_a.set_title("A. V5.4 Fix 2: Widened Left Grandstand Stairway (X=-168, Z=-395..-378) — 5 Steps & Clear Top Landing", fontsize=10.5, fontweight='bold')
-    ax_a.set_xlabel("World Z (Top Landing Z=-394..-388 Unobstructed at Y=70..73  <---  5 Stair Steps Z=-387..-380)")
+            col_s = cat_grid[xw - x_min, (-42 - z_min):(-30 - z_min), yw - y_min]
+            nz = col_s[col_s > 0]
+            if len(nz) > 0:
+                gs_slice[yb1 - yw, xw - xb0] = palette_rgb[int(np.max(nz))]
+    ax_a.imshow(gs_slice, extent=[xb0, xb1, yb0, yb1], aspect='auto')
+    ax_a.set_title("A. V5.5 Fix 1: Elevated Belvedere Tower 4F (Y=85..94) Separated Above 3F Roof (Y=84) at (27, 88, -32)", fontsize=10.5, fontweight='bold')
+    ax_a.set_xlabel("World X (3F Roof at Y=84 X=4..25  <--->  Elevated 4F Lantern Room Y=85..94 X=26..37)")
     ax_a.set_ylabel("Elevation Y")
     ax_a.grid(True, linestyle=':', alpha=0.4, color='gray')
 
@@ -465,31 +471,31 @@ def run_validation_and_render(world_dir, out_dir):
             if len(nz) > 0:
                 fw_slice[yf1 - yw, xw - xf0] = palette_rgb[int(np.max(nz))]
     ax_b.imshow(fw_slice, extent=[xf0, xf1, yf0, yf1], aspect='auto')
-    ax_b.set_title("B. V5.4 Santa Monica Pier: 36m Pacific Wheel (154, 86, -582) & West Coaster Roller Coaster", fontsize=10.5, fontweight='bold')
+    ax_b.set_title("B. V5.5 Santa Monica Pier: 36m Pacific Wheel (154, 86, -582) & West Coaster Roller Coaster", fontsize=10.5, fontweight='bold')
     ax_b.set_xlabel("World X")
     ax_b.set_ylabel("Elevation Y")
     ax_b.grid(True, linestyle=':', alpha=0.4, color='gray')
 
     ax_c = axes2[1, 0]
-    xp0, xp1, yp0, yp1 = -145, 45, 60, 86
+    xp0, xp1, yp0, yp1 = -310, 350, 52, 92
     pb_slice = np.full((yp1 - yp0 + 1, xp1 - xp0 + 1, 3), 235, dtype=np.uint8)
     for xw in range(xp0, xp1 + 1):
         for yw in range(yp0, yp1 + 1):
-            col_s = cat_grid[xw - x_min, (-592 - z_min):(-580 - z_min), yw - y_min]
+            col_s = cat_grid[xw - x_min, (-666 - z_min):(-480 - z_min), yw - y_min]
             nz = col_s[col_s > 0]
             if len(nz) > 0:
                 pb_slice[yp1 - yw, xw - xp0] = palette_rgb[int(np.max(nz))]
-    ax_c.imshow(pb_slice, extent=[xp0, xp1, yp0, yp1], aspect='auto')
-    ax_c.set_title("C. V5.4 Palisades Bluff Park & Camera Obscura at (-52, 72, -586) — Matchbox Replaced!", fontsize=10.5, fontweight='bold')
-    ax_c.set_xlabel("World X (West Foothills -> Palisades Bluff Y=72 & Camera Obscura -> Coastal Bluff Slope -> PCH Y=64)")
+    ax_c.imshow(pb_slice, extent=[xp0, xp1, yp0, yb1 if False else yp1], aspect='auto')
+    ax_c.set_title("C. V5.5 Full E-W Section: Venice Canals -> 3rd St Promenade -> Palisades Bluffs -> Beach/Pier -> X+ Waterfall Cove", fontsize=10.0, fontweight='bold')
+    ax_c.set_xlabel("World X (Venice Canals & Villas -> 3rd St Promenade -> Palisades Bluffs -> Santa Monica Beach -> X+ Cove 343,74,-659)")
     ax_c.set_ylabel("Elevation Y")
     ax_c.grid(True, linestyle=':', alpha=0.4, color='gray')
 
     ax_d = axes2[1, 1]
-    bp_rgb = img_rgb[(-785 - z_min):(-448 - z_min + 1), (-60 - x_min):(235 - x_min + 1), :].astype(np.uint8)
-    ax_d.imshow(bp_rgb, extent=[-60, 235, -448, -785], aspect='auto')
-    ax_d.set_title("D. V5.4 Santa Monica State Beach, Pacific Park Pier & Palisades Bluffs (X=-60..235, Z=-785..-448)", fontsize=10.5, fontweight='bold')
-    ax_d.set_xlabel("World X (Palisades Bluffs -> PCH -> Bike Path & Boardwalk -> Muscle Beach & Volleyball -> Santa Monica Pier)")
+    bp_rgb = img_rgb[(-856 - z_min):(-448 - z_min + 1), (-310 - x_min):(348 - x_min + 1), :].astype(np.uint8)
+    ax_d.imshow(bp_rgb, extent=[-310, 348, -448, -856], aspect='auto')
+    ax_d.set_title("D. V5.5 Master Plan: X- Venice Canals & 3rd St Promenade + 416m Santa Monica Beach + X+ Waterfall Cove", fontsize=10.0, fontweight='bold')
+    ax_d.set_xlabel("World X (Venice Canals -> 3rd St Promenade -> Palisades Bluffs -> Santa Monica Beach & Pier -> X+ Waterfall Cove)")
     ax_d.set_ylabel("World Z")
     ax_d.grid(True, linestyle=':', alpha=0.4, color='white')
 

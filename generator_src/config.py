@@ -1,10 +1,10 @@
 """
-config.py — Centralized Spatial Coordinates, Palette & World Constants for Modern Manor V5.4
+config.py — Centralized Spatial Coordinates, Palette & World Constants for Modern Manor V5.5
 ============================================================================================
 Target Version: Minecraft Java Edition 1.21.10 (DataVersion = 4556, Protocol = 773)
 """
 
-MANOR_VERSION = 'v5.4'
+MANOR_VERSION = 'v5.5'
 MINECRAFT_VERSION = '1.21.10'
 DATA_VERSION = 4556
 PROTOCOL_VERSION = 773
@@ -16,8 +16,8 @@ SEA_LEVEL = 62
 HARBOR_FLOOR = 50
 
 CANVAS_BOUNDS = {
-    'x_min': -320, 'x_max': 255,
-    'z_min': -800, 'z_max': 191,
+    'x_min': -320, 'x_max': 351,
+    'z_min': -864, 'z_max': 191,
     'y_min': 16,   'y_max': 175,
 }
 EXPECTED_CANVAS_CHUNKS = ((CANVAS_BOUNDS['x_max'] - CANVAS_BOUNDS['x_min'] + 1) // 16) * ((CANVAS_BOUNDS['z_max'] - CANVAS_BOUNDS['z_min'] + 1) // 16)
@@ -38,8 +38,8 @@ ZONE_BOUNDS = {
     'underwater_michelin':  (156, 180, -57, -28),
     'north_sports_complex': (-224, 128, -396, -252),
     'transition_parkbelt':  (-224, 185, -447, -397),
-    'seaside_beach_park':   (24, 248, -792, -448),
-    'palisades_bluff_park': (-140, 23, -792, -448),
+    'seaside_beach_park':   (24, 348, -856, -448),
+    'palisades_bluff_park': (-312, 23, -856, -448),
 }
 
 MAT = {

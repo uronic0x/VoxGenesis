@@ -1,5 +1,5 @@
 """
-generate_estate.py — Master Orchestrator for Modern Manor V5.4 World Generation
+generate_estate.py — Master Orchestrator for Modern Manor V5.5 World Generation
 ===============================================================================
 """
 
@@ -135,7 +135,7 @@ def main():
     wx = CANVAS_BOUNDS['x_max'] - CANVAS_BOUNDS['x_min'] + 1
     wz = CANVAS_BOUNDS['z_max'] - CANVAS_BOUNDS['z_min'] + 1
     wy = CANVAS_BOUNDS['y_max'] - CANVAS_BOUNDS['y_min'] + 1
-    print(f"=== MODERN MANOR V5.4 GENERATOR (Target: {work_world}) ===")
+    print(f"=== MODERN MANOR V5.5 GENERATOR (Target: {work_world}) ===")
     print(f"1. Loading {wx}x{wz}x{wy} full-chunk canvas ({EXPECTED_CANVAS_CHUNKS} chunks: X in {CANVAS_BOUNDS['x_min']}..{CANVAS_BOUNDS['x_max']}, Z in {CANVAS_BOUNDS['z_min']}..{CANVAS_BOUNDS['z_max']})...")
     canvas = WorldCanvas()
     canvas.load_from_regions(region_dir)
@@ -186,10 +186,10 @@ def main():
     print("15b. Building Expansion 9 (V5.3 Enlarged Sports Complex): 3-Block-Lane Track & Field Stadium, Non-Overlapping Grandstand & VIP Press Box, Crisp 5x7 Scoreboard, Basketball Park & Indoor Arena (X=-224..128, Z=-396..-252)...")
     step15_north_sports_complex(canvas)
 
-    print("15c. Building Expansion 10 (V5.4): 50-Block Coastal Transition Belt & 352-Block Santa Monica State Beach, Pacific Park Pier & Original Muscle Beach (X=24..255, Z=-800..-448)...")
+    print("15c. Building Expansion 10 (V5.5): 50-Block Coastal Transition Belt, 416-Block Santa Monica State Beach, Pacific Park Pier & East X+ Emerald Waterfall Cove (X=24..351, Z=-864..-448)...")
     step16_seaside_beach_park_and_transition(canvas)
 
-    print("15d. Building Expansion 11 (V5.4): Santa Monica Palisades Bluff Park, California Incline & Camera Obscura Overlook (X=-320..23, Z=-800..-448)...")
+    print("15d. Building Expansion 11 (V5.5): Palisades Bluff Park, Third Street Promenade, Civic Center, Venice Canals (6 Distinct Villas) & Aero Hangar (X=-320..23, Z=-864..-448)...")
     step17_main_urban_district_prototype(canvas)
 
     print("16. Running automatic double-door hinge symmetry & horizontal pane/fence connectivity passes...")

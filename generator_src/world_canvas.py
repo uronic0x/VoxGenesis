@@ -511,19 +511,22 @@ class WorldCanvas:
 
                         in_cliff_apron = (
                             croot['Status'][1] == 'minecraft:full' and (
-                                (cz_min - 5 <= cz < cz_min and cx_min - 2 <= cx <= cx_max + 5) or
-                                (cx_max < cx <= cx_max + 5 and cz_min - 5 <= cz <= -15)
+                                (-65 <= cz < cz_min and cx_min - 4 <= cx <= 31) or
+                                (cx_max < cx <= 31 and -65 <= cz <= -12)
                             )
                         )
                         if in_cliff_apron and 'sections' in croot:
                             base_x_b, base_z_b = cx * 16, cz * 16
                             grass_nbt = spec_to_nbt('minecraft:grass_block[snowy=false]')
+                            moss_nbt = spec_to_nbt('minecraft:moss_block')
                             dirt_nbt = spec_to_nbt('minecraft:dirt')
                             sand_nbt = spec_to_nbt('minecraft:sand')
                             sandstone_nbt = spec_to_nbt('minecraft:smooth_sandstone')
                             water_nbt = spec_to_nbt('minecraft:water[level=0]')
+                            azalea_nbt = spec_to_nbt('minecraft:azalea_leaves[distance=1,persistent=true,waterlogged=false]')
+                            fl_azalea_nbt = spec_to_nbt('minecraft:flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]')
 
-                            col_cap_y = [175] * 256
+                            col_cap_y = [80] * 256
                             col_is_sea = [False] * 256
                             for lz_i in range(16):
                                 wz_i = base_z_b + lz_i
@@ -539,22 +542,23 @@ class WorldCanvas:
                                     edge_is_water = False
                                     for wy_scan in range(110, 48, -1):
                                         b_ed = self.get_block_name(cx_clamp, wy_scan, cz_clamp)
-                                        if b_ed not in ('minecraft:air', 'minecraft:light'):
+                                        if b_ed not in ('minecraft:air', 'minecraft:light') and not b_ed.endswith('_leaves'):
                                             edge_y = wy_scan
                                             edge_is_water = (b_ed == 'minecraft:water')
                                             break
+                                    wave_h = int(round(2.0 * math.sin(wx_i / 24.0) * math.cos(wz_i / 28.0)))
                                     if edge_is_water and dx_out > 0 and wz_i >= self.z_min:
-
-                                        if d_out <= 28.0:
+                                        if d_out <= 20.0:
                                             col_cap_y[lz_i * 16 + lx_i] = 56
                                             col_is_sea[lz_i * 16 + lx_i] = True
                                         else:
-                                            col_cap_y[lz_i * 16 + lx_i] = 62 + int((d_out - 28.0) * 0.65)
+                                            col_cap_y[lz_i * 16 + lx_i] = min(82 + wave_h, 62 + int((d_out - 20.0) * 0.22) + wave_h)
                                     else:
 
-                                        col_cap_y[lz_i * 16 + lx_i] = edge_y + int(d_out * 0.55)
+                                        col_cap_y[lz_i * 16 + lx_i] = min(84 + wave_h, edge_y + int(d_out * 0.18) + max(0, wave_h))
 
                         if 'sections' in croot:
+                            apron_secs = {}
                             for s in croot['sections'][2]:
                                 sc = s[1]
                                 sy = sc['Y'][1]
@@ -562,9 +566,8 @@ class WorldCanvas:
                                     pal_list, indices = unpack_section_blocks(sc['block_states'][1])
                                     if in_cliff_apron:
                                         base_y_b = sy * 16
-
-                                    has_nat = (sy >= 6 and any(p[1]['Name'][1] in NATURAL_VEGETATION_CLEAN_SET for p in pal_list))
-                                    if in_cliff_apron and base_y_b + 15 >= min(col_cap_y):
+                                    has_nat = (sy >= 5 and any(p[1]['Name'][1] in NATURAL_VEGETATION_CLEAN_SET for p in pal_list))
+                                    if in_cliff_apron and base_y_b + 15 >= min(col_cap_y) - 4:
                                         new_pal = list(pal_list)
                                         spec_idx_map = {nbt_to_spec(p): i for i, p in enumerate(new_pal)}
                                         def _get_pidx(nbt_item):
@@ -575,10 +578,13 @@ class WorldCanvas:
                                             return spec_idx_map[sp]
                                         air_pi = _get_pidx(air_nbt)
                                         grass_pi = _get_pidx(grass_nbt)
+                                        moss_pi = _get_pidx(moss_nbt)
                                         dirt_pi = _get_pidx(dirt_nbt)
                                         sand_pi = _get_pidx(sand_nbt)
                                         sstone_pi = _get_pidx(sandstone_nbt)
                                         water_pi = _get_pidx(water_nbt)
+                                        az_pi = _get_pidx(azalea_nbt)
+                                        fl_az_pi = _get_pidx(fl_azalea_nbt)
                                         new_indices = list(indices)
                                         sec_modified = False
                                         for ly_i in range(16):
@@ -587,12 +593,14 @@ class WorldCanvas:
                                             for col_i in range(256):
                                                 cur_pi = new_indices[ly_off + col_i]
                                                 cur_name = new_pal[cur_pi][1]['Name'][1]
-                                                if sy >= 6 and cur_name in NATURAL_VEGETATION_CLEAN_SET:
+                                                if sy >= 5 and cur_name in NATURAL_VEGETATION_CLEAN_SET:
                                                     new_indices[ly_off + col_i] = air_pi
                                                     sec_modified = True
-                                                    continue
+                                                    cur_name = 'minecraft:air'
                                                 cap_y = col_cap_y[col_i]
                                                 is_sea_col = col_is_sea[col_i]
+                                                lx_c, lz_c = col_i & 15, col_i >> 4
+                                                wx_c, wz_c = base_x_b + lx_c, base_z_b + lz_c
                                                 if is_sea_col:
                                                     if wy_i > 62 and cur_name != 'minecraft:air':
                                                         new_indices[ly_off + col_i] = air_pi
@@ -604,17 +612,28 @@ class WorldCanvas:
                                                         new_indices[ly_off + col_i] = sand_pi
                                                         sec_modified = True
                                                 else:
-                                                    if wy_i > cap_y and cur_name != 'minecraft:air':
+                                                    if wy_i == cap_y + 1:
+
+                                                        if cap_y >= 66 and ((wx_c * 7 + wz_c * 13) % 23 == 0):
+                                                            new_indices[ly_off + col_i] = az_pi if (wx_c + wz_c) % 2 == 0 else fl_az_pi
+                                                            sec_modified = True
+                                                        elif cur_name != 'minecraft:air':
+                                                            new_indices[ly_off + col_i] = air_pi
+                                                            sec_modified = True
+                                                    elif wy_i > cap_y + 1 and cur_name != 'minecraft:air':
                                                         new_indices[ly_off + col_i] = air_pi
                                                         sec_modified = True
-                                                    elif wy_i == cap_y and (cur_name in ('minecraft:stone', 'minecraft:dirt', 'minecraft:andesite', 'minecraft:diorite', 'minecraft:granite', 'minecraft:tuff', 'minecraft:gravel', 'minecraft:sandstone', 'minecraft:calcite') or cur_name.endswith('_ore')):
-                                                        new_indices[ly_off + col_i] = grass_pi if wy_i >= 64 else sand_pi
-                                                        sec_modified = True
-                                                    elif cap_y - 2 <= wy_i < cap_y and (cur_name in ('minecraft:stone', 'minecraft:andesite', 'minecraft:diorite', 'minecraft:granite', 'minecraft:tuff', 'minecraft:calcite') or cur_name.endswith('_ore')):
-                                                        new_indices[ly_off + col_i] = dirt_pi if cap_y >= 65 else sstone_pi
-                                                        sec_modified = True
+                                                    elif wy_i == cap_y and cur_name not in ('minecraft:air', 'minecraft:water'):
+                                                        surf_pi = (moss_pi if (wx_c + wz_c) % 4 == 0 else grass_pi) if wy_i >= 64 else sand_pi
+                                                        if new_indices[ly_off + col_i] != surf_pi:
+                                                            new_indices[ly_off + col_i] = surf_pi
+                                                            sec_modified = True
+                                                    elif cap_y - 3 <= wy_i < cap_y and cur_name not in ('minecraft:air', 'minecraft:water'):
+                                                        sub_pi = (sstone_pi if (wy_i == cap_y - 3 or cap_y < 65) else dirt_pi)
+                                                        if new_indices[ly_off + col_i] != sub_pi:
+                                                            new_indices[ly_off + col_i] = sub_pi
+                                                            sec_modified = True
                                         if sec_modified:
-
                                             used_pis = sorted(set(new_indices))
                                             compact_pal = [new_pal[u] for u in used_pis]
                                             remap = {u: ni for ni, u in enumerate(used_pis)}
@@ -623,6 +642,43 @@ class WorldCanvas:
                                             if 'SkyLight' in sc: del sc['SkyLight']
                                             if 'BlockLight' in sc: del sc['BlockLight']
                                             changed_border = True
+                                            pal_list, indices = compact_pal, compact_indices
+                                    apron_secs[sy] = (pal_list, indices)
+                            if in_cliff_apron and changed_border and 'Heightmaps' in croot:
+
+                                b_ws, b_of, b_mb, b_mbnl = [63] * 256, [63] * 256, [63] * 256, [63] * 256
+                                for col_i in range(256):
+                                    f_ws = f_of = f_mb = f_mbnl = False
+                                    for sy_h in sorted(apron_secs.keys(), reverse=True):
+                                        pal_h, idx_h = apron_secs[sy_h]
+                                        for ly_h in range(15, -1, -1):
+                                            b_nm = pal_h[idx_h[ly_h * 256 + col_i]][1]['Name'][1]
+                                            if b_nm in ('minecraft:air', 'minecraft:cave_air', 'minecraft:void_air', 'minecraft:light'):
+                                                continue
+                                            wy_h = sy_h * 16 + ly_h
+                                            val_h = wy_h + 65
+                                            is_w = (b_nm == 'minecraft:water')
+                                            is_lv = b_nm.endswith('_leaves')
+                                            if not f_ws: b_ws[col_i] = val_h; f_ws = True
+                                            if not f_of and not is_w: b_of[col_i] = val_h; f_of = True
+                                            if not f_mb: b_mb[col_i] = val_h; f_mb = True
+                                            if not f_mbnl and not is_lv: b_mbnl[col_i] = val_h; f_mbnl = True
+                                            if f_ws and f_of and f_mb and f_mbnl:
+                                                break
+                                        if f_ws and f_of and f_mb and f_mbnl:
+                                            break
+                                croot['Heightmaps'][1]['WORLD_SURFACE'] = ('long_array', pack_heightmap(b_ws))
+                                croot['Heightmaps'][1]['OCEAN_FLOOR'] = ('long_array', pack_heightmap(b_of))
+                                croot['Heightmaps'][1]['MOTION_BLOCKING'] = ('long_array', pack_heightmap(b_mb))
+                                croot['Heightmaps'][1]['MOTION_BLOCKING_NO_LEAVES'] = ('long_array', pack_heightmap(b_mbnl))
+                            for s in ([] if in_cliff_apron else croot['sections'][2]):
+                                sc = s[1]
+                                sy = sc['Y'][1]
+                                if sy >= 3 and 'block_states' in sc:
+                                    pal_list, indices = unpack_section_blocks(sc['block_states'][1])
+                                    has_nat = (sy >= 6 and any(p[1]['Name'][1] in NATURAL_VEGETATION_CLEAN_SET for p in pal_list))
+                                    if False:
+                                        pass
                                     elif has_nat:
                                         new_pal = []
                                         old_to_new = {}

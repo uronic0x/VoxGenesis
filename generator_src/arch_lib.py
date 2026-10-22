@@ -490,24 +490,28 @@ def build_straight_stairs(c, x1, y_bottom, z1, width, height, direction='north',
                 if not (hy == y_top + 1 and b_up.endswith('_carpet')):
                     c.set_block(lx, hy, lz, 'minecraft:air')
 
-def build_tower(c, x1, y_base, z1, size=8, height=22):
+def build_tower(c, x1, y_base, z1, size=8, height=28):
     """
-    V4 Modernist Architectural Belvedere & Lantern Tower (X=28..35, Z=-41..-34):
-    - Aligns tower landings with the exact Main Villa floor elevations:
+    V5.5 Elevated Modernist Architectural Belvedere & Lantern Tower (X=28..35, Z=-41..-34):
+    - Aligns tower landings with the exact Main Villa floor elevations AND elevates the 4F Belvedere
+      Lantern Room above the 3F roof slab (`Y = 85..92`) so ZERO roof-slab fusion occurs at `(27, 88, -32)`:
         * 1F: y_base      (Y = 64)
         * 2F: y_base + 6  (Y = 70)
         * 3F: y_base + 13 (Y = 77)
-        * 4F: y_base + 19 (Y = 83, Rooftop Belvedere Observation Deck)
+        * 4F: y_base + 21 (Y = 85, Elevated Rooftop Belvedere Observation Deck — 1 block above Y=84 3F roof!)
+        * Tower Roof: y_base + 28 (Y = 92..94, giving a spacious 6-block floor-to-ceiling lantern room Y = 86..91!)
     - Opens wide 3-block archways on BOTH the South wall (`Z = z2 = -34`) and West wall (`X = x1 = 28`)
-      on 1F, 2F, and 3F so the tower is 100% connected to the Main Villa on every single floor!
+      on 1F, 2F, 3F, and 4F, plus smooth quartz transition steps down onto the Y=84 3F rooftop terrace!
     """
     x2, z2 = x1 + size - 1, z1 + size - 1
-    y_top = y_base + height
-    floor_levels = [y_base + 6, y_base + 13, y_base + 19]
+    y_4f = y_base + 21
+    y_top = max(y_base + 28, y_base + height)
+    lower_floors = [y_base + 6, y_base + 13]
+    floor_levels = lower_floors + [y_4f]
 
     c.fill(x1, y_base, z1, x2, y_base + 1, z2, MAT['stone_pol_and'])
 
-    for y in range(y_base + 1, y_top - 2):
+    for y in range(y_base + 1, y_4f + 1):
         for x in range(x1, x2 + 1):
             for z in range(z1, z2 + 1):
                 on_x = (x in (x1, x2))
@@ -527,7 +531,18 @@ def build_tower(c, x1, y_base, z1, size=8, height=22):
                     c.set_block(x, y, z, 'minecraft:air')
 
     for fy in floor_levels:
-        c.fill(x1 - 2, fy, z1 - 2, x2 + 2, fy, z2 + 2, MAT['slab_dark_t'])
+
+        c.fill(x1 - 2, fy + 1, z1 - 2, x2 + 2, fy + 6, z2 + 2, 'minecraft:air')
+        if fy == y_4f:
+
+            c.fill(x1 - 2, fy, z1 - 2, x2 + 2, fy, z2 + 2, MAT['wall_quartz'])
+
+            for bx_s in range(x1 - 2, x2 + 3):
+                for bz_s in range(z1 - 2, z2 + 3):
+                    if c.get_block_name(bx_s, fy - 1, bz_s) in ('minecraft:air', 'minecraft:light') or 'slab' in c.get_block_name(bx_s, fy - 1, bz_s):
+                        c.set_block(bx_s, fy - 1, bz_s, MAT['slab_dark_t'])
+        else:
+            c.fill(x1 - 2, fy, z1 - 2, x2 + 2, fy, z2 + 2, MAT['slab_dark_t'])
         c.fill(x1 + 1, fy, z1 + 1, x2 - 1, fy, z2 - 1, MAT['wood_dark'])
         for lx in (x1 + 1, x2 - 1):
             for lz in (z1 + 1, z2 - 1):
@@ -544,48 +559,63 @@ def build_tower(c, x1, y_base, z1, size=8, height=22):
             c.set_block(x2 + 2, fy + 1, z, MAT['pane_black'])
         c.fill(x1 + 1, fy + 1, z1 + 1, x2 - 1, fy + 1, z2 - 1, 'minecraft:air')
 
+    for z_step in range(z2 - 2, z2 + 1):
+        c.set_block(x1 - 2, y_4f + 1, z_step, 'minecraft:air')
+        c.set_block(x1 - 2, y_4f, z_step, stair('smooth_quartz', 'east', 'bottom'))
+        c.set_block(x1 - 3, y_4f, z_step, 'minecraft:air')
+
+    for x_step in range(x1 + 2, x1 + 5):
+        c.set_block(x_step, y_4f + 1, z2 + 2, 'minecraft:air')
+        c.set_block(x_step, y_4f, z2 + 2, stair('smooth_quartz', 'north', 'bottom'))
+        c.set_block(x_step, y_4f, z2 + 3, 'minecraft:air')
+
     for lx in (x1 + 1, x2 - 1):
         for lz in (z1 + 1, z2 - 1):
             c.set_block(lx, y_base, lz, MAT['light_ochre'])
 
-    c.fill(x1 - 2, y_base + 20, z1 - 2, x2 + 3, y_top - 1, z2 + 2, 'minecraft:air')
-    for x in range(x1 - 2, x2 + 3):
-        c.set_block(x, y_base + 20, z1 - 2, MAT['pane_black'])
-        c.set_block(x, y_base + 20, z2 + 2, MAT['pane_black'])
-    for z in range(z1 - 2, z2 + 3):
-        c.set_block(x1 - 2, y_base + 20, z, MAT['pane_black'])
-        c.set_block(x2 + 2, y_base + 20, z, MAT['pane_black'])
-
     cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
-    build_spiral_staircase(c, cx, y_base + 1, y_base + 19, cz, radius=2, start_sector=5, clockwise=True, intermediate_floors=[y_base + 6, y_base + 13])
+    build_spiral_staircase(c, cx, y_base + 1, y_4f, cz, radius=2, start_sector=5, clockwise=True, intermediate_floors=[y_base + 6, y_base + 13])
 
-    for fy_open in [y_base, y_base + 6, y_base + 13, y_base + 19]:
-        h_open = 3 if fy_open < y_base + 19 else 2
+    for fy_open in [y_base, y_base + 6, y_base + 13, y_4f]:
+        h_open = 3
 
-        c.fill(x1 + 2, fy_open, z2 - 1, x1 + 4, fy_open, z2 + 2, MAT['wood_dark'] if fy_open > y_base else MAT['wall_quartz'])
-        c.fill(x1 + 2, fy_open + 1, z2, x1 + 4, fy_open + h_open, z2 + 2, 'minecraft:air')
+        c.fill(x1 + 2, fy_open, z2 - 1, x1 + 4, fy_open, z2 + 1, MAT['wood_dark'] if fy_open > y_base else MAT['wall_quartz'])
+        c.fill(x1 + 2, fy_open + 1, z2, x1 + 4, fy_open + h_open, z2 + 1, 'minecraft:air')
 
-        c.fill(x1 - 2, fy_open, z1 + 2, x1, fy_open, z2 - 2, MAT['wood_dark'] if fy_open > y_base else MAT['wall_quartz'])
-        c.fill(x1 - 2, fy_open + 1, z1 + 2, x1, fy_open + h_open, z2 - 2, 'minecraft:air')
+        c.fill(x1 - 1, fy_open, z1 + 2, x1, fy_open, z2 - 2, MAT['wood_dark'] if fy_open > y_base else MAT['wall_quartz'])
+        c.fill(x1 - 1, fy_open + 1, z1 + 2, x1, fy_open + h_open, z2 - 2, 'minecraft:air')
 
         if fy_open in (y_base + 6, y_base + 13) and c.get_block_name(x1 + 1, fy_open, z2 - 2) == 'minecraft:air':
             c.set_block(x1 + 1, fy_open, z2 - 2, MAT['slab_quartz_t'])
 
-        if fy_open == y_base + 19:
-            c.fill(x2, fy_open + 1, z1 + 2, x2, fy_open + 2, z2 - 2, 'minecraft:air')
-            c.fill(x1 + 2, fy_open + 1, z1, x2 - 2, fy_open + 2, z1, 'minecraft:air')
-
-    for y in (y_top - 2, y_top - 1):
+    for y in range(y_4f + 1, y_top):
         for x in range(x1, x2 + 1):
             for z in range(z1, z2 + 1):
                 if x in (x1, x2) and z in (z1, z2):
                     c.set_block(x, y, z, MAT['wall_white'])
                 elif x in (x1, x2) or z in (z1, z2):
-                    if not (y <= y_base + 21 and ((z == z2 and x1 + 2 <= x <= x1 + 4) or (x == x1 and z1 + 2 <= z <= z2 - 2) or (x == x2 and z1 + 2 <= z <= z2 - 2) or (z == z1 and x1 + 2 <= x <= x2 - 2))):
+                    is_4f_door = (
+                        y <= y_4f + 3 and (
+                            (z == z2 and x1 + 2 <= x <= x1 + 4) or
+                            (z == z1 and x1 + 2 <= x <= x2 - 2) or
+                            (x == x1 and z1 + 2 <= z <= z2 - 2) or
+                            (x == x2 and z1 + 2 <= z <= z2 - 2)
+                        )
+                    )
+                    if is_4f_door:
+                        c.set_block(x, y, z, 'minecraft:air')
+                    elif y == y_top - 1:
+                        c.set_block(x, y, z, MAT['wall_white'])
+                    elif (x in (x1 + 1, x2 - 1) and z in (z1, z2)) or (z in (z1 + 1, z2 - 1) and x in (x1, x2)):
+                        c.set_block(x, y, z, MAT['pillar_quartz'])
+                    else:
                         c.set_block(x, y, z, MAT['glass_clear'])
                 elif (x, z) != (cx, cz):
-                    c.set_block(x, y, z, 'minecraft:air')
+                    if y > y_4f + 2 or c.get_block_name(x, y, z) == 'minecraft:air':
+                        c.set_block(x, y, z, 'minecraft:air')
+
     build_flat_roof_and_eaves(c, x1, y_top, z1, x2, z2, overhang=2, hidden_lights=True)
+    build_crystal_chandelier(c, cx + 1, y_top, cz, drop=2, style='pearl')
 
 def build_pergola_colonnade(c, x1, y_ground, z1, x2, z2, axis='z', lamp_step=8):
     xa, xb = min(x1, x2), max(x1, x2)

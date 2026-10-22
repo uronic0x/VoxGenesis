@@ -50,7 +50,7 @@ def step1_flatten_and_grade_terrain(c: WorldCanvas):
             for dz in (-2, 0, 2):
                 for dx in (-2, 0, 2):
                     ny = c.orig_surface_y.get((x + dx, z + dz), Y_BASE)
-                    acc += min(92, ny)
+                    acc += min(76, ny)
                     cnt += 1
             smoothed_orig_y[(x, z)] = int(round(acc / cnt))
 
@@ -113,7 +113,7 @@ def step1_flatten_and_grade_terrain(c: WorldCanvas):
             d_lhouse = 0.0 if in_lighthouse_headland else _rounded_box_dist(x, z, 126, 170, -234, -196, corner_r=6.0)
             d_golf = _rounded_box_dist(x, z, -162, 128, -268, -96, corner_r=28.0)
             d_sports = _rounded_box_dist(x, z, -224, 132, -396, -268, corner_r=20.0)
-            d_north_exp = _rounded_box_dist(x, z, -304, 240, -632, -396, corner_r=16.0)
+            d_north_exp = _rounded_box_dist(x, z, -312, 340, -856, -396, corner_r=16.0)
             d_farm = _rounded_box_dist(x, z, -234, -94, -150, 102, corner_r=18.0)
             d_heli = _rounded_box_dist(x, z, 80, 112, 26, 96, corner_r=10.0)
             d = min(d_core, d_park, d_lhouse, d_golf, d_sports, d_north_exp, d_farm, d_heli)
@@ -1106,7 +1106,7 @@ def step5_main_villa_complex(c: WorldCanvas):
 
     build_spiral_staircase(c, 4, y_1f, y_3f, -14, radius=2)
 
-    build_tower(c, 28, y_1f, -41, size=8, height=22)
+    build_tower(c, 28, y_1f, -41, size=8, height=28)
 
     c.fill(29, y_1f + 1, -35, 34, y_1f + 3, -32, 'minecraft:air')
     c.fill(26, y_1f + 1, -39, 28, y_1f + 3, -36, 'minecraft:air')

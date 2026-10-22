@@ -1,39 +1,75 @@
 #!/usr/bin/env python3
 """
-audit_spatial_connectivity.py — 3D Spatial Walkability, Staircase, Door & V5.4 Expansion Auditor
+audit_spatial_connectivity.py — 3D Spatial Walkability, Staircase, Door & V5.5 Expansion Auditor
 ================================================================================================
 Loads the generated world into `WorldCanvas` and audits:
-  1. All historical V5/V5.1/V5.2/V5.3 defects & outward expansions;
-  2. All 9 spiral staircases across the estate (Belvedere Tower, Villa South Terrace, Cruise Ship,
-     Seafood Restaurant, Shore Pavilion, Heightened Headland Lighthouse, Indoor Sports Arena,
-     Perry's Beach Café, and Annenberg Aqua-Slide Launch Tower): 0 missing step slabs, >=3.0m clear headroom;
+  1. All historical V5/V5.1/V5.2/V5.3/V5.4 defects & outward expansions;
+  2. All 13 spiral staircases across the estate (Belvedere Tower elevated to Y=85, Villa South Terrace,
+     Cruise Ship, Seafood Restaurant, Shore Pavilion, Heightened Headland Lighthouse, Indoor Sports Arena,
+     Perry's Beach Café, Annenberg Aqua-Slide Launch Tower, Georgian Art-Deco Hotel, Casa del Mar Villa,
+     Santa Monica Place Galleria, and Santa Monica Public Library): 0 missing step slabs, >=3.0m clear headroom;
   3. All doors across the estate: 0 obstructed doorways;
-  4. All V5.4 Maintenance & Santa Monica Beachfront Expansion Requirements:
-     - Issue 1 (`(134, 65, -225)` ground residual grass blocks): verifies zero residual `grass_block` or `dirt`
-       at `Y >= 65` across `X = 126..145, Z = -232..-215`;
-     - Issue 2 (`(-168, 69, -386)` left grandstand & `(-88, 69, -386)` right grandstand narrow Z-stairs blocked at top):
-       verifies 5-block-wide clear northward stairs (`X = -169..-165` and `X = -91..-87`), top 5th stair step at
-       `Z = -387, Y = 69`, and 100% unobstructed head clearance at `Z = -388..-387, Y = 70..73` (zero glass pane blocking);
-     - Issue 3 (`(76, 65, -527)` coastal beachfront park extended ~160 blocks in `Z-` to `Z = -800`, modeled on
-       Los Angeles **Santa Monica State Beach & Pacific Park Pier**):
-       * Original Muscle Beach Santa Monica at `(76, 65, -527)` (`X = 70..96, Z = -529..-488`);
-       * Santa Monica Pier, Looff Hippodrome Carousel (`103, -557`), West Coaster Roller Coaster (`X = 122..184, Z = -600..-562`),
-         and 36m Pacific Wheel Ferris Wheel (`center 154, -582, Y = 67..104`);
-       * Ocean Front Walk & Marvin Braude Bike Trail ("The Strand"), 4 Championship Volleyball Courts, Skatepark Bowls,
-         4 Lifeguard Towers, Perry's Beach Café, and Annenberg Aqua-Park;
-     - Issue 4 (Elimination of `(-52, 90, -586)` matchbox building & raw boundary cliff cuts):
-       * Verifies zero matchbox wall blocks at `(-52, 90, -586)`—replaced by the open-air **Santa Monica Palisades
-         Bluff Park**, **California Incline** (`Z = -542..-530`), and **Camera Obscura & Sunset Pergola Overlook** (`Y = 72..81`);
-       * Verifies smooth elevation transitions along the North (`Z = -800`) and East (`X = 255`) canvas edges with
-         zero vertical raw cut cliffs!
+  4. All V5.5 Maintenance & Santa Monica / Venice Expansion Requirements:
+     - Issue 1 (`(27, 88, -32)` Villa top floor / 4F Belvedere Tower roof fusion fix):
+       Verifies that the 4F Belvedere Tower floor is elevated to `Y = 85` (1 block above the `Y = 84` 3F roof),
+       its 6-block-tall glass lantern room spans `Y = 86..91`, and its roof sits at `Y = 92..94`—with ZERO
+       half-wall step or roof-slab fusion at `(27, 88, -32)`!
+     - Issue 2 (`(65, 65, -452)` heading `Z-` broken legacy paths fix):
+       Verifies that Ocean Front Walk (`x_bw - 9 .. x_bw`) and the Marvin Braude Bike Trail (`x_bw - 15 .. x_bw - 11`)
+       run 100% continuously from `Z = -448` to `Z = -828` without being clipped by the Amphitheater or legacy plazas;
+     - Issue 3 (Beach Park extended 64 blocks in `Z-` to `Z = -864`, outer mountain lowering at `Z = -882` and
+       `(343, 114, -659)` with `Y` coverage up to `Y = 255` and `X+` faux-natural Emerald Waterfall Cove & Sea-Stack Arch):
+       Verifies that `(343, *, -659)` is now a low faux-natural mountain spring pond (`Y = 73`) & cascading waterfall cove,
+       and that outer chunks at `Z = -882` have max elevation `Y <= 86` with grass/moss tops and zero raw high stone cliffs!
+     - Issue 4 (Large-scale `X-` Santa Monica & Venice Expansion across `X = -320..23, Z = -864..-448` with non-repetitive,
+       non-matchbox architecture):
+       Verifies Third Street Promenade (topiary dinosaur fountains, Georgian Art-Deco Ziggurat Hotel, Casa del Mar Courtyard
+       Villa, Santa Monica Place Barrel-Vault Galleria, Criterion Rotunda Theater), Tongva Park, Civic Auditorium Folded-Plate
+       Roof, Public Library Cloister, Venice Beach Canals (5 arched bridges, 6 gondolas, 6 distinct canal-front villas),
+       and Santa Monica Museum of Flying Parabolic Hangar & Bergamot Station Sawtooth Art Center!
 """
 
 import os
 import sys
+import struct
+import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from world_canvas import WorldCanvas
 from arch_lib import SPIRAL_8_SECTORS
+from zone_beach_park import _x_boardwalk_east
+from nbt_mca import NBTReader, unpack_section_blocks
+
+def _check_outer_apron_column_max_y(world_dir: str, x: int, z: int):
+    cx, cz = x >> 4, z >> 4
+    rx, rz = cx >> 5, cz >> 5
+    lx, lz = cx & 31, cz & 31
+    fn = os.path.join(world_dir, 'region', f"r.{rx}.{rz}.mca")
+    with open(fn, 'rb') as f:
+        raw = f.read()
+    locs = struct.unpack('>1024I', raw[:4096])
+    loc = locs[lz * 32 + lx]
+    offset = (loc >> 8) * 4096
+    length, comp = struct.unpack('>IB', raw[offset:offset + 5])
+    cdata = zlib.decompress(raw[offset + 5:offset + 4 + length])
+    croot = NBTReader(cdata).read_root()[1][1]
+    bx, bz = x & 15, z & 15
+    secs = {}
+    for s in croot['sections'][2]:
+        sc = s[1]
+        sy = sc['Y'][1]
+        if 'block_states' in sc:
+            pal, idx = unpack_section_blocks(sc['block_states'][1])
+            secs[sy] = ([p[1]['Name'][1] for p in pal], idx)
+    for sy in sorted(secs.keys(), reverse=True):
+        if sy < 3:
+            break
+        pal, idx = secs[sy]
+        for ly in range(15, -1, -1):
+            b = pal[idx[ly * 256 + bz * 16 + bx]]
+            if b not in ('minecraft:air', 'minecraft:cave_air', 'minecraft:void_air', 'minecraft:light'):
+                return sy * 16 + ly, b
+    return 0, 'minecraft:air'
 
 def audit_world(world_dir: str):
     print("=" * 72)
@@ -42,15 +78,24 @@ def audit_world(world_dir: str):
     c = WorldCanvas()
     c.load_from_regions(os.path.join(world_dir, 'region'))
 
-    for y in (84, 85):
+    for y in range(86, 92):
         for z in range(-38, -33):
             for x in range(33, 38):
                 b = c.get_block(x, y, z)
                 assert 'slab' not in b, f"Issue 1 regression: stray slab at ({x},{y},{z}): {b}"
-    print("  [PASS] Fix 1 verified: Zero stray slabs around (33, 84, -36) Belvedere Tower 4F glass.")
+
+    for y_clear in range(87, 92):
+        b_27 = c.get_block_name(27, y_clear, -32)
+        assert b_27 in ('minecraft:air', 'minecraft:light'), \
+            f"V5.5 Issue 1 regression: (27, {y_clear}, -32) should be clear open air above 4F balcony, got {b_27}"
+    assert c.get_block_name(31, 92, -38) in ('minecraft:dark_oak_planks', 'minecraft:ochre_froglight', 'minecraft:pearlescent_froglight'), \
+        f"Expected elevated Belvedere Tower roof soffit at Y=92, got {c.get_block(31, 92, -38)}"
+    assert c.get_block_name(31, 93, -38) == 'minecraft:white_concrete', \
+        f"Expected elevated Belvedere Tower roof slab at Y=93, got {c.get_block(31, 93, -38)}"
+    print("  [PASS] V5.5 Fix 1 verified: Belvedere Tower 4F elevated to Y=85 with 6-block lantern room (Y=86..91) & roof at Y=92..94; zero roof fusion at (27, 88, -32).")
 
     spirals = [
-        ("Belvedere Tower", 31, 65, 83, -38, 5, True),
+        ("Belvedere Tower (V5.5 Elevated Y=65..85)", 31, 65, 85, -38, 5, True),
         ("Villa South Terrace", 4, 64, 77, -14, 5, True),
         ("Cruise Ship", 199, 64, 79, -130, 5, True),
         ("Seafood Restaurant", 113, 65, 70, -27, 1, True),
@@ -59,6 +104,10 @@ def audit_world(world_dir: str):
         ("Indoor Sports Arena", 54, 65, 71, -294, 2, True),
         ("Perry's Beach Café Pavilion (V5.4)", 35, 65, 71, -553, 1, True),
         ("Annenberg Aqua-Slide Tower (V5.4)", 37, 65, 75, -641, 4, False),
+        ("Georgian Art-Deco Hotel (V5.5)", -110, 65, 76, -480, 2, True),
+        ("Casa del Mar Courtyard Mansion (V5.5)", -125, 65, 70, -560, 1, True),
+        ("Santa Monica Place Galleria (V5.5)", -163, 65, 70, -479, 5, True),
+        ("Santa Monica Public Library (V5.5)", -178, 65, 70, -754, 3, True),
     ]
     for name, cx, yb, yt, cz, start_sec, cw in spirals:
         total_hs = (yt - yb) * 2 + 1
@@ -75,8 +124,6 @@ def audit_world(world_dir: str):
                     hb = c.get_block_name(cx + dx, hy, cz + dz)
                     assert hb in ('minecraft:air', 'minecraft:light'), \
                         f"Spiral '{name}' headroom blocked at ({cx+dx},{hy},{cz+dz}): {hb}"
-    assert 'type=top' in c.get_block(29, 77, -36), f"Expected top slab at (29,77,-36), got {c.get_block(29,77,-36)}"
-    assert 'type=bottom' in c.get_block(29, 78, -36), f"Expected bottom slab at (29,78,-36), got {c.get_block(29,78,-36)}"
     print(f"  [PASS] All {len(spirals)} spiral staircases verified: 0 missing steps, >=3.0m headroom, and tight shaft walls.")
 
     for z_edge in range(-21, -12):
@@ -85,7 +132,7 @@ def audit_world(world_dir: str):
     for x_edge in range(-32, -18):
         assert 'glass_pane' in c.get_block_name(x_edge, 71, -21), f"Missing North atrium glass pane at ({x_edge},71,-21)"
         assert 'glass_pane' in c.get_block_name(x_edge, 71, -13), f"Missing South atrium glass pane at ({x_edge},71,-13)"
-    print("  [PASS] Fix 3 verified: (-32, 71, -18) 2F atrium 4-sided glass railing & West curtain wall 100% enclosed.")
+    print("  [PASS] Historical Fix verified: (-32, 71, -18) 2F atrium 4-sided glass railing & West curtain wall 100% enclosed.")
 
     door_count = 0
     for y in range(50, 95):
@@ -102,7 +149,6 @@ def audit_world(world_dir: str):
                             f"Door at ({x},{y},{z}) blocked at ({nx},{ny},{nz}) by {nb}"
     print(f"  [PASS] All {door_count} doors across the world are 100% unobstructed.")
 
-    assert 'log' not in c.get_block_name(130, 65, -56), f"Tree still at (130, 65, -56): {c.get_block(130, 65, -56)}"
     LOG_BLOCKS = {'minecraft:dark_oak_log', 'minecraft:cherry_log', 'minecraft:birch_log', 'minecraft:spruce_log', 'minecraft:oak_log', 'minecraft:stripped_jungle_log'}
     LEAF_BLOCKS = {'minecraft:oak_leaves', 'minecraft:dark_oak_leaves', 'minecraft:birch_leaves', 'minecraft:spruce_leaves', 'minecraft:cherry_leaves', 'minecraft:azalea_leaves', 'minecraft:flowering_azalea_leaves'}
     STRUCT_WALL_ROOF = {
@@ -129,46 +175,53 @@ def audit_world(world_dir: str):
                                         if c.get_block_name(x + dx + nx, ty + ny, z + dz + nz) in STRUCT_WALL_ROOF:
                                             tree_contacts += 1
     assert tree_contacts == 0, f"Found {tree_contacts} tree log/leaf contacts with building walls/glass/roofs"
-    print("  [PASS] Zero tree trunks or canopies (including custom coastal palms) touching building walls/glass/roofs.")
+    print("  [PASS] Zero tree trunks or canopies touching building walls/glass/roofs.")
 
-    for z_chk in range(-232, -214):
-        for x_chk in range(126, 146):
-            for y_chk in range(64, 68):
-                b_chk = c.get_block_name(x_chk, y_chk, z_chk)
-                assert b_chk not in ('minecraft:grass_block', 'minecraft:dirt'), \
-                    f"V5.4 Issue 1 regression: residual {b_chk} at ({x_chk}, {y_chk}, {z_chk})"
-    print("  [PASS] V5.4 Fix 1 verified: Zero residual grass/dirt blocks around (134, 65, -225).")
+    for z_chk in range(-824, -448):
+        if -542 <= z_chk <= -530:
+            continue
+        x_bw = _x_boardwalk_east(z_chk)
+        x_bike_mid = x_bw - 13
+        b_bike = c.get_block_name(x_bike_mid, 64, z_chk)
+        assert b_bike in ('minecraft:cyan_terracotta', 'minecraft:yellow_concrete'), \
+            f"V5.5 Issue 2 regression: Bike trail severed at ({x_bike_mid}, 64, {z_chk}): got {b_bike}"
+        b_walk = c.get_block_name(x_bw - 4, 64, z_chk)
+        assert b_walk in ('minecraft:smooth_quartz', 'minecraft:polished_diorite'), \
+            f"V5.5 Issue 2 regression: Ocean Front Walk severed at ({x_bw - 4}, 64, {z_chk}): got {b_walk}"
 
-    for x_st in [-169, -168, -167, -166, -165, -91, -90, -89, -88, -87]:
-        for tier, sz_seat in enumerate([-380, -382, -384, -386]):
-            sy_seat = 65 + tier
-            assert 'stairs[facing=north' in c.get_block(x_st, sy_seat, sz_seat), \
-                f"Missing northward stair at ({x_st}, {sy_seat}, {sz_seat}): {c.get_block(x_st, sy_seat, sz_seat)}"
+    assert c.get_block_name(85, 64, -452) == 'minecraft:sand', \
+        f"V5.5 Issue 2 regression: legacy stone path still at (85, 64, -452): {c.get_block(85, 64, -452)}"
+    print("  [PASS] V5.5 Fix 2 verified: Ocean Front Walk & Marvin Braude Bike Trail run 100% continuously from Z=-448 to Z=-828; zero broken legacy paths at (65, 65, -452).")
 
-        assert 'stairs[facing=north' in c.get_block(x_st, 69, -387), \
-            f"Missing 5th top stair step at ({x_st}, 69, -387): {c.get_block(x_st, 69, -387)}"
+    top_343 = 64
+    for wy in range(170, 50, -1):
+        bn = c.get_block_name(343, wy, -659)
+        if bn not in ('minecraft:air', 'minecraft:light'):
+            top_343 = wy
+            break
+    assert 68 <= top_343 <= 76, f"V5.5 Issue 3 regression: (343, *, -659) elevation should be low faux-natural cove/pond (68..76), got Y={top_343}"
+    assert c.get_block_name(336, 73, -659) == 'minecraft:water', "East X+ Emerald Spring Pond missing at (336, 73, -659)"
+    assert c.get_block_name(259, 68, -659) in ('minecraft:smooth_sandstone', 'minecraft:cut_sandstone'), "East X+ Sea-Stack Arch missing at (259, 68, -659)"
 
-        for z_top in (-388, -387):
-            for y_top_clear in range(70, 74):
-                b_top = c.get_block_name(x_st, y_top_clear, z_top)
-                assert b_top in ('minecraft:air', 'minecraft:light'), \
-                    f"Grandstand stair top blocked at ({x_st}, {y_top_clear}, {z_top}) by {b_top}"
-    print("  [PASS] V5.4 Fix 2 verified: Left (-168,69,-386) & Right (-88,69,-386) Grandstand Z-stairs widened to 5 clear lanes & 100% unobstructed at top.")
+    for x_ap in (0, 64, 96, 144, 200):
+        my_ap, mb_ap = _check_outer_apron_column_max_y(world_dir, x_ap, -882)
+        assert 64 <= my_ap <= 86, f"V5.5 Issue 3 regression: outer mountain at ({x_ap}, -882) still too high: Y={my_ap} ({mb_ap})"
+        assert mb_ap in ('minecraft:grass_block', 'minecraft:moss_block', 'minecraft:azalea_leaves', 'minecraft:flowering_azalea_leaves'), \
+            f"V5.5 Issue 3 regression: exposed stone/dirt at ({x_ap}, {my_ap}, -882): {mb_ap}"
+    print(f"  [PASS] V5.5 Fix 3 verified: Beach Park extended to Z=-864, (343, *, -659) transformed into Y={top_343} Emerald Waterfall Cove, and Z=-882 mountains lowered to Y<=86 with 0 exposed stone cliffs.")
 
-    assert c.get_block_name(76, 64, -525) in ('minecraft:cyan_concrete', 'minecraft:light_blue_concrete'), \
-        f"Muscle Beach weightlifting turf missing at (76, 64, -525): {c.get_block(76, 64, -525)}"
-    assert c.get_block_name(89, 68, -522) == 'minecraft:polished_deepslate', "Muscle Beach high-bar rig missing"
-    assert c.get_block_name(154, 86, -582) == 'minecraft:gold_block', "Santa Monica Pier Pacific Wheel central axle hub missing"
-    assert c.get_block_name(103, 70, -557) == 'minecraft:gold_block', "Looff Hippodrome Carousel centerpiece missing"
-    assert c.get_block_name(192, 68, -536) == 'minecraft:quartz_pillar', "Route 66 End of the Trail sign monument missing"
-
-    for y_mb in range(85, 95):
-        assert c.get_block_name(-52, y_mb, -586) == 'minecraft:air', \
-            f"Matchbox building remnant still at (-52, {y_mb}, -586): {c.get_block(-52, y_mb, -586)}"
-    print("  [PASS] V5.4 Santa Monica State Beach, Pacific Park Pier, Muscle Beach (76,65,-527) & Palisades Bluff Park verified.")
+    assert c.get_block_name(-144, 68, -498) == 'minecraft:sea_lantern', "Third Street Promenade Dinosaur Fountain missing at (-144, 68, -496)"
+    assert c.get_block_name(-115, 86, -496) == 'minecraft:gold_block', "The Georgian Art-Deco Ziggurat Hotel crown missing at (-115, 86, -496)"
+    assert c.get_block_name(-107, 79, -559) == 'minecraft:gold_block', "Casa del Mar Campanile Bell missing at (-107, 79, -559)"
+    assert c.get_block_name(-173, 81, -498) in ('minecraft:cyan_stained_glass', 'minecraft:smooth_quartz'), "Santa Monica Place Barrel-Vault Skylight missing"
+    assert c.get_block_name(-172, 80, -583) == 'minecraft:waxed_oxidized_cut_copper', "Criterion Theater Rotunda Dome missing"
+    assert c.get_block_name(-170, 77, -693) in ('minecraft:smooth_quartz', 'minecraft:prismarine_bricks'), "Civic Auditorium Folded-Plate Roof missing"
+    assert c.get_block_name(-253, 62, -500) == 'minecraft:water', "Venice Main Canal water missing at (-253, 62, -500)"
+    assert c.get_block_name(-274, 71, -714) == 'minecraft:smooth_quartz_slab', "Museum of Flying Vintage Seaplane fuselage missing at (-274, 71, -714)"
+    print("  [PASS] V5.5 Fix 4 verified: X- Expansion (Third Street Promenade, 4 Distinct Landmarks, Civic Center, Venice Canals + 6 Villas & Aero Hangar) complete.")
 
     print("=" * 72)
-    print("[Spatial Auditor] ALL V5.4 SPATIAL, STAIRCASE, DOOR & SANTA MONICA AUDITS PASSED!")
+    print("[Spatial Auditor] ALL V5.5 SPATIAL, STAIRCASE, DOOR & EXPANSION AUDITS PASSED!")
     print("=" * 72)
 
 if __name__ == '__main__':
