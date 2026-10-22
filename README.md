@@ -69,13 +69,13 @@ An entire modern world is constructed on a canvas of tens of thousands of voxels
 ```bash
 # 0. Place the official minecraft-server.jar (1.21.10) into tools/
 
-# 1. Pre-generate the raw world template from the seed (~2 min, one-time; seed is built into the script)
+# 1. Pre-generate the raw world template from the seed (one-time; seed is built into the script)
 python tools/pregen_seed_world.py --accept-eula --out ./seed_world
 
 # 2. Copy the template as a working save
 cp -r seed_world TEST_BUILDINGS          # Windows: Copy-Item -Recurse seed_world TEST_BUILDINGS
 
-# 3. Run the generator (~25 s)
+# 3. Run the generator
 python generator_src/generate_estate.py ./TEST_BUILDINGS
 
 # 4. Validate and render (optional)

@@ -69,13 +69,13 @@
 ```bash
 # 0. 把官方 minecraft-server.jar（1.21.10）放入 tools/
 
-# 1. 从种子号预生成原始世界模板（约 2 分钟，只需一次；种子号已内置在脚本中）
+# 1. 从种子号预生成原始世界模板（只需一次；种子号已内置在脚本中）
 python tools/pregen_seed_world.py --accept-eula --out ./seed_world
 
 # 2. 复制模板为工作存档
 cp -r seed_world TEST_BUILDINGS          # Windows: Copy-Item -Recurse seed_world TEST_BUILDINGS
 
-# 3. 运行生成器（约 25 秒）
+# 3. 运行生成器
 python generator_src/generate_estate.py ./TEST_BUILDINGS
 
 # 4. 验证与渲染（可选）
