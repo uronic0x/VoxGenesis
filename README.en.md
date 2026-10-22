@@ -19,6 +19,7 @@ An entire modern world is constructed on a canvas of tens of thousands of voxels
 ```
 ├── README.md                          # Documentation (Chinese)
 ├── README.en.md                       # This file (English)
+├── LICENSE                            # MIT License
 ├── .gitignore
 ├── generator_src/                     # Generator source code
 │   ├── config.py                      # Coordinate bounds, elevation baselines, material palette
@@ -124,4 +125,4 @@ Voxel primitives overwrite previously placed blocks; every multi-story building 
 
 ## License & Acknowledgements
 
-This is an original procedural generation tool. Minecraft is a trademark of Mojang AB. This project does not distribute Minecraft server binaries; users must obtain a legitimate copy themselves.
+This project is open source under the [MIT License](LICENSE). This is an original procedural generation tool. Minecraft is a trademark of Mojang AB. This project does not distribute Minecraft server binaries; users must obtain a legitimate copy themselves.

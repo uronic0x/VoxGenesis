@@ -19,6 +19,7 @@
 ```
 ├── README.md                          # 本文件（中文）
 ├── README.en.md                       # English documentation
+├── LICENSE                            # MIT License
 ├── .gitignore
 ├── generator_src/                     # 生成器源码
 │   ├── config.py                      # 坐标边界、高程基准、材质调色板
@@ -124,4 +125,4 @@ python generator_src/validate_and_render.py ./TEST_BUILDINGS .
 
 ## 许可与致谢
 
-本项目为原创程序化生成工具。Minecraft 为 Mojang AB 商标，本项目不分发 Minecraft 服务端二进制，使用者须自行获取正版。
+本项目以 [MIT License](LICENSE) 开源。本项目为原创程序化生成工具。Minecraft 为 Mojang AB 商标，本项目不分发 Minecraft 服务端二进制，使用者须自行获取正版。
